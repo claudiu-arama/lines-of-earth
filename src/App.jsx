@@ -1,9 +1,8 @@
-import QueryForm from './QueryForm';
+import QueryForm from './assets/components/QueryForm';
 
 function App() {
   return (
     <div>
-      <h1>My App</h1>
       <QueryForm />
     </div>
   );

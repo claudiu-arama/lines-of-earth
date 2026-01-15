@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './QueryForm.scss';
 
 function QueryForm() {
     const [inputValue, setInputValue] = useState("");
@@ -9,7 +10,7 @@ function QueryForm() {
     const handleInputChange = (event) => {
         const inputData = event.target.value.trim();
         if (inputData.includes(">") || inputData.includes("<")) {
-            setError("Use of the special chars is not permitted.");
+            setError("Use of the special characters is not permitted.");
             return;
         }
         setInputValue(inputData);
@@ -40,6 +41,7 @@ function QueryForm() {
                 type: item.type,
                 lat: item.lat,
                 lon: item.lon,
+                osm_id: item.osm_id,
                 areaId: item.osm_type === 'relation' ? parseInt(item.osm_id) + 3600000000 : null,
                 bbox: item.boundingbox
             }))
@@ -53,30 +55,49 @@ function QueryForm() {
     }
 
     return (
-        <>
-            <form onSubmit={handleFormSubmit}>
-                <label htmlFor="searchInput">Search:</label>
-                <input type="text" max-length="50" id="searchInput" value={inputValue} placeholder="start by searching for a city" onChange={handleInputChange} />
-                <button type='submit'>Submit</button>
-            </form>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <div style={{ marginTop: '20px' }}>
-            {suggestions.length > 0 && (
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-                {suggestions.map((city) => (
-                <li key={city.osm_id} style={{ marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                    <strong>{city.display_name}</strong>
-                    <br />
-                    <small>Type: {city.type} | ID: {city.osm_id}</small>
-                    <br />
-                    <small>Lat: {city.lat} | Lon: {city.lon}</small>
-                </li>
-                ))}
-            </ul>
-            )}
+    <div className="page-container">
+      <div className="search-card">
+        <h1 className="title">City Explorer</h1>
+        <p className="subtitle">
+          First enter your city name.
+        </p>
+
+        <form onSubmit={handleFormSubmit} className="search-form">
+          <input 
+            type="text" 
+            className="search-input"
+            value={inputValue} 
+            placeholder="Search for a city..." 
+            onChange={handleInputChange} 
+            disabled={isLoading}
+          />
+          
+          <button type='submit' className="submit-button" disabled={isLoading}>
+            {isLoading ? 'Searching...' : 'Find City'}
+          </button>
+        </form>
+
+        {error && <p className="error-message">{error}</p>}
+
+        <div className="results-container">
+          {suggestions.map((city) => (
+            <button 
+              key={city.osm_id} 
+              className="suggestion-item"
+              disabled={!city.areaId}
+            >
+              <div className="city-name">{city.display_name}</div>
+              <div className="city-meta">
+                Type : {city.type} <br />
+                Lat: {city.lat} | Lon: {city.lon} <br />
+                OSM ID: {city.osm_id} 
+              </div>
+            </button>
+          ))}
         </div>
-        </>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default QueryForm;
