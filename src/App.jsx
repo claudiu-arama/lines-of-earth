@@ -1,4 +1,4 @@
-import QueryForm from './assets/components/QueryForm';
+import QueryForm from './components/QueryForm';
 
 function App() {
   return (
