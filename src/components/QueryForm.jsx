@@ -244,7 +244,7 @@ export default function App() {
                 return acc;
             }, { roads: [], bounds: { minLat: 90, maxLat: -90, minLon: 180, maxLon: -180 } });
 
-            setRawRoads(responseRoads); // This triggers Step 1 (Processing)
+            setRawRoads(responseRoads); // trigger step1
             setSuggestions([]);
         } catch (err) {
             setError(err && err.message);
@@ -255,7 +255,6 @@ export default function App() {
 
     return (
         <div className="page-container" ref={containerRef}>
-            {/* UI CODE REMAINS THE SAME AS BEFORE... */}
             <div className="search-overlay">
                 <div className="search-card">
                     <h1 className="title">City Frames</h1>
