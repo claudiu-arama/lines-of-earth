@@ -1,15 +1,22 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import "./QueryForm.scss";
-import {simplifyPath, projectCoordinateToMeters, debounce} from "./Helpers.jsx";
+import { projectCoordinateToMeters } from "../helpers/locationHelpers.js";
+import { simplifyPath } from "../helpers/mathHelpers.js"
+import { recursiveFetch } from "../helpers/overpassService.js";
+import { debounce} from "../helpers/utilities.js";
+import { arrayofAPIs } from "../constants/apis.js"
+import { useQuery } from "@tanstack/react-query";
+import { fetchCitySuggestions } from "../helpers/nominatimService.js";
+
 /**
  * MAIN COMPONENT
  */
 export default function App() {
     // -- UI State --
     const [inputValue, setInputValue] = useState("");
+    const [inputQuery, setInputQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
 
     // -- Data State --
     const [rawRoads, setRawRoads] = useState(null);
@@ -19,7 +26,7 @@ export default function App() {
     const [renderDuration, setRenderDuration] = useState(null);
 
     // -- Camera & Interaction --
-    const [transform, setTransform] = useState({ scale: 0, x: 0, y: 0 }); 
+    const [transform, setTransform] = useState({ scale: 0, x: 0, y: 0 });
     const isDragging = useRef(false);
     const lastMousePos = useRef({ x: 0, y: 0 });
     const canvasRef = useRef(null);
@@ -123,7 +130,7 @@ export default function App() {
         const handleMouseDown = (e) => {
             isDragging.current = true;
             lastMousePos.current = { x: e.clientX, y: e.clientY };
-            canvas.style.cursor = 'grabbing';
+            canvas.style.cursor = "grabbing";
         };
         
         const handleMouseMove = (e) => {
@@ -137,13 +144,13 @@ export default function App() {
         
         const handleMouseUp = () => {
             isDragging.current = false;
-            canvas.style.cursor = 'grab';
+            canvas.style.cursor = "grab";
         };
         
         const handleWheel = (e) => {
             e.preventDefault();
             //scroll up is zoom in.
-            const factor = Math.pow(1.05, -e.deltaY / 100);
+            const factor = Math.pow(1.1, -e.deltaY / 50);
             
             setTransform(prev => {
                 const rect = canvas.getBoundingClientRect();
@@ -159,17 +166,17 @@ export default function App() {
             });
         };
 
-        canvas.addEventListener('mousedown', handleMouseDown);
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener("mousedown", handleMouseDown);
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
         // passive in order to do prevent default
-        canvas.addEventListener('wheel', handleWheel, { passive: false });
+        canvas.addEventListener("wheel", handleWheel, { passive: false });
         
         return () => {
-            canvas.removeEventListener('mousedown', handleMouseDown);
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-            canvas.removeEventListener('wheel', handleWheel);
+            canvas.removeEventListener("mousedown", handleMouseDown);
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+            canvas.removeEventListener("wheel", handleWheel);
         };
     }, []); // listeners attached once on mount
 
@@ -190,82 +197,70 @@ export default function App() {
         return () => window.removeEventListener("resize", debouncedUpdate);
     }, []);
 
-    const handleFormSubmit = async (e) => {
-        e.preventDefault();
-        if (!inputValue) return;
-        setSuggestions([]);
-        setError(null);
-        setIsLoading(true);
-
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(inputValue)}&format=json&limit=5&addressdetails=1&accept-language=en`);
-            const data = await response.json();
-            if (data.length === 0) throw new Error("No cities found.");
-            setSuggestions(data.map(item => ({
-                display_name: item.display_name,
-                areaId: item.osm_type === "relation" ? parseInt(item.osm_id) + 3600000000 : parseInt(item.osm_id) + 2400000000
-            })));
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
+    const query = `[timeout:2700][out:json];area(${city.areaId})->.searchArea; (way["highway"](area.searchArea);way["junction"="roundabout"](area.searchArea););out geom;`;
+    const {newData, isRoadsError, isRoadsPending, newError} = useQuery({
+    queryKey: ['roadsData', query],
+    queryFn: () => recursiveFetch(urlArray, query),
+    retry: false
+    })
     const handleCitySelect = async (city) => {
-        setIsLoading(true);
-        setError(null);
         setRawRoads(null); // clear previous map
         
-        try {
-            const start = performance.now();
-            const query = `[timeout:2700][out:json];area(${city.areaId})->.searchArea; (way["highway"](area.searchArea);way["junction"="roundabout"](area.searchArea););out geom;`;
-            const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-            const data = await response.json();
-            setFetchDuration((performance.now() - start).toFixed(2));
-            
-            // only parse here
-            const responseRoads = data.elements.reduce((acc, el) => {
-                if (el.type !== "way" || !el.geometry) return acc;
-                // Calculate bounds locally
-                el.geometry.forEach(p => {
-                   const { lat, lon } = p;
-                    if (lat < acc.bounds.minLat) acc.bounds.minLat = lat;
-                    if (lat > acc.bounds.maxLat) acc.bounds.maxLat = lat;
-                    if (lon < acc.bounds.minLon) acc.bounds.minLon = lon;
-                    if (lon > acc.bounds.maxLon) acc.bounds.maxLon = lon;
-                });
-                acc.roads.push({
-                    type: el.tags?.highway || "unclassified",
-                    //roundabouts
-                    isClosed: el.nodes[0] === el.nodes[el.nodes.length - 1],
-                    coordinates: el.geometry.map(p => [p.lat, p.lon])
-                });
-                return acc;
-            }, { roads: [], bounds: { minLat: 90, maxLat: -90, minLon: 180, maxLon: -180 } });
+        
+        // only parse here
+        const responseRoads = newData.elements.reduce((acc, el) => {
+            if (el.type !== "way" || !el.geometry) return acc;
+            // Calculate bounds locally
+            el.geometry.forEach(p => {
+                const { lat, lon } = p;
+                if (lat < acc.bounds.minLat) acc.bounds.minLat = lat;
+                if (lat > acc.bounds.maxLat) acc.bounds.maxLat = lat;
+                if (lon < acc.bounds.minLon) acc.bounds.minLon = lon;
+                if (lon > acc.bounds.maxLon) acc.bounds.maxLon = lon;
+            });
+            acc.roads.push({
+                type: el.tags?.highway || "unclassified",
+                //roundabouts
+                isClosed: el.nodes[0] === el.nodes[el.nodes.length - 1],
+                coordinates: el.geometry.map(p => [p.lat, p.lon])
+            });
+            return acc;
+        }, { roads: [], bounds: { minLat: 90, maxLat: -90, minLon: 180, maxLon: -180 } });
 
-            setRawRoads(responseRoads); // trigger step1
-            setSuggestions([]);
-        } catch (err) {
-            setError(err && err.message);
-        } finally {
-            setIsLoading(false);
-        }
+        setRawRoads(responseRoads); // trigger step1
+        setSuggestions([]);
     };
+    const handleOnChange = (e) => {
+        setInputValue(e.target.value);
+    }
+
+    useEffect(() => {
+        let timer = setTimeout(() => {
+            setInputQuery(inputValue);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [inputValue]);
+
+    const { data, isError, isPending, error } = useQuery({
+        queryKey: ['cityQuery', inputQuery],
+        queryFn: () => fetchCitySuggestions(inputQuery),
+        enabled: inputQuery.length > 2,
+        staleTime: 1000 * 60 * 5
+    })
 
     return (
         <div className="page-container" ref={containerRef}>
             <div className="search-overlay">
                 <div className="search-card">
                     <h1 className="title">City Frames</h1>
-                    
-                    <form className="search-form" onSubmit={handleFormSubmit}>
+                    {/* MARK: search form */}
+                    <form className="search-form">
                         <input 
-                            type="text" 
-                            className="search-input" 
-                            placeholder="Enter city name..." 
+                            type="text"
+                            className="search-input"
+                            placeholder="Enter city name..."
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={(e) => handleOnChange(e)}
                             disabled={isLoading}
                         />
                         {isLoading && (
@@ -275,9 +270,9 @@ export default function App() {
                                 </svg>
                             </div>
                         )}
-                        <button 
-                            type="submit" 
-                            className="button submit-button" 
+                        <button
+                            type="submit"
+                            className="button submit-button"
                             disabled={isLoading || !inputValue}
                         >
                             Search
@@ -285,12 +280,15 @@ export default function App() {
                     </form>
 
                     {error && <div className="error-message">{error}</div>}
-
+                    {/* MARK: Render City Suggestions */}
                     <div className="results-container">
-                        {suggestions.map((city, i) => (
+                        {data?.map((city, i) => (
                             <div key={i} className="suggestion-item" onClick={() => handleCitySelect(city)}>
-                                <span className="city-name">{city.display_name.split(',')[0]}</span>
+                                <span className="city-name">{city.display_name.split(",")[0]}</span>
                                 <span className="city-meta">{city.display_name}</span>
+                                <span className="city-name">{city.type}</span>
+                                <span className="city-meta">{city.lat} / {city.lon}</span>
+
                             </div>
                         ))}
                     </div>
@@ -298,17 +296,17 @@ export default function App() {
                     {pathObjects && (
                         <div className="roads-info">
                             <div className="stat-row">
-                                <label style={{fontSize: '0.75rem', color: '#666'}}>Roads loaded</label>
+                                <label style={{fontSize: "0.75rem", color: "#666"}}>Roads loaded</label>
                                 <span>{rawRoads?.roads.length.toLocaleString()}</span>
                             </div>
                             {renderDuration && (
                                 <div className="stat-row">
-                                    <label style={{fontSize: '0.75rem', color: '#666'}}>Render duration</label>
+                                    <label style={{fontSize: "0.75rem", color: "#666"}}>Render duration</label>
                                     <span>{renderDuration}ms</span>
                                 </div>
                             )}
-                            <div className="stat-row" style={{marginTop: '4px'}}>
-                                <label style={{fontSize: '0.75rem', color: '#666'}}>Network fetch duration</label>
+                            <div className="stat-row" style={{marginTop: "4px"}}>
+                                <label style={{fontSize: "0.75rem", color: "#666"}}>Network fetch duration</label>
                                 <span>{fetchDuration}ms</span>
                             </div>
                             <button className="button clear-button" onClick={() => {
@@ -325,7 +323,7 @@ export default function App() {
             </div>
 
             <div id="map-container">
-                <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', cursor: isDragging.current ? 'grabbing' : 'grab' }} />
+                <canvas ref={canvasRef} style={{ width: "100%", height: "100%", display: "block", cursor: isDragging.current ? "grabbing" : "grab" }} />
             </div>
         </div>
     );

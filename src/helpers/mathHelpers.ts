@@ -1,4 +1,5 @@
-const getSquaredSegmentDistance = (point, segmentStart, segmentEnd) => {
+import type { Point } from "./utilities";
+const getSquaredSegmentDistance = (point: Point, segmentStart: Point, segmentEnd: Point): number => {
     let startX = segmentStart[0];
     let startY = segmentStart[1];
     
@@ -31,7 +32,7 @@ const getSquaredSegmentDistance = (point, segmentStart, segmentEnd) => {
     return dx * dx + dy * dy;
 };
 
-const simplifyDouglasPeuckerStep = (allPoints, startIndex, endIndex, squaredTolerance, simplifiedResults) => {
+const simplifyDouglasPeuckerStep = (allPoints: Point[], startIndex: number, endIndex: number, squaredTolerance: number, simplifiedResults: Point[]): void => {
     let maxSquaredDistance = squaredTolerance;
     let mostDistantIndex = -1;
     // Look at every point start to finish
@@ -57,7 +58,7 @@ const simplifyDouglasPeuckerStep = (allPoints, startIndex, endIndex, squaredTole
     }
 };
 
-export const simplifyPath = (allPoints, distanceThreshold) => {
+export const simplifyPath = (allPoints: Point[], distanceThreshold: number): Point[] => {
     // If road only has 2 points no work needed
     if (allPoints.length <= 2) return allPoints;
 
@@ -75,29 +76,4 @@ export const simplifyPath = (allPoints, distanceThreshold) => {
     simplifiedResults.push(allPoints[lastIndex]);
 
     return simplifiedResults;
-};
-
-export const projectCoordinateToMeters = (latitude, longitude, centerLat, centerLon, scale) => {
-
-    const EARTH_RADIUS_METERS = 6378137;
-    const DEGREES_TO_RADIANS = Math.PI / 180;
-
-    const longitudeDeltaInRadians = (longitude - centerLon) * DEGREES_TO_RADIANS;
-    const latitudeInRadians = centerLat * DEGREES_TO_RADIANS;
-    
-    const x = longitudeDeltaInRadians * EARTH_RADIUS_METERS * Math.cos(latitudeInRadians);
-
-    const latitudeDeltaInRadians = (latitude - centerLat) * DEGREES_TO_RADIANS;
-    
-    const y = -1 * (latitudeDeltaInRadians * EARTH_RADIUS_METERS);
-
-    return [x * scale, y * scale];
-};
-
-export const debounce = (func, wait) => {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
 };
