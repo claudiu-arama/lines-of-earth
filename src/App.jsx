@@ -1,8 +1,10 @@
 import QueryForm from "./components/QueryForm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+// window.__TANSTACK_QUERY_CLIENT__ = queryClient;
+
 const queryClient = new QueryClient();
-window.__TANSTACK_QUERY_CLIENT__ = queryClient;
+
 function App() {
     return (
         <div>

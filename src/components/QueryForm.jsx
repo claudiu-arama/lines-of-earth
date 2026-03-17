@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import "./QueryForm.scss";
+import style from  "./App.module.scss";
 import { projectCoordinateToMeters } from "../helpers/locationHelpers.js";
 import { simplifyPath } from "../helpers/mathHelpers.js"
-import { recursiveFetch } from "../helpers/overpassService.js";
 import { debounce} from "../helpers/utilities.js";
-import { arrayofAPIs } from "../constants/apis.js"
 import { useQuery } from "@tanstack/react-query";
 import { fetchCitySuggestions } from "../helpers/nominatimService.js";
-
+import { useRoadsData } from "../hooks/data/useRoadsData.js"
+import { responseRoads } from "../helpers/formatCityHelper.js";
+import { useQueryClient } from "@tanstack/react-query";
+import { LAYER_KEYS, LAYER_CONFIG } from "../constants/layerConfigs.js";
 /**
  * MAIN COMPONENT
  */
@@ -15,15 +16,15 @@ export default function App() {
     // -- UI State --
     const [inputValue, setInputValue] = useState("");
     const [inputQuery, setInputQuery] = useState("");
-    const [suggestions, setSuggestions] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [queryCity, setQueryCity] = useState(null);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     // -- Data State --
-    const [rawRoads, setRawRoads] = useState(null);
     const [pathObjects, setPathObjects] = useState(null); // The cached Path2D objects
     // -- Performance Data --
     const [fetchDuration, setFetchDuration] = useState(null);
     const [renderDuration, setRenderDuration] = useState(null);
+    const [currentMirrorIndex, setCurrentMirrorIndex] = useState(0);
 
     // -- Camera & Interaction --
     const [transform, setTransform] = useState({ scale: 0, x: 0, y: 0 });
@@ -32,28 +33,63 @@ export default function App() {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
 
+    const [visibleLayers, setVisibleLayers] = useState({
+        express: true,
+        arterial: true,
+        local: true,
+        service: false,
+        pedestrian: false,
+        nature: false,
+        transit: true
+    });
+
+    const queryClient = useQueryClient();
+
+    // MARK: get roads data - custom roads hook
+    const { data: processedData, isError: isRoadError, isFetching: isRoadFetching } = useRoadsData(queryCity, {
+        select: responseRoads,
+        enabled: !!queryCity
+    }, setCurrentMirrorIndex, setFetchDuration);
+
+    const rafId = useRef(null);
+
     //MARK: precalculated paths
     useEffect(() => {
-        if (!rawRoads) {
+        if (!processedData) {
             //early return
             setPathObjects(null);
             return;
         }
-
         const startTime = performance.now();
-        const { roads, bounds } = rawRoads;
-        
+        const { roads, bounds } = processedData;
+        const { clientWidth:width, clientHeight:height } = containerRef.current;
+
+        const maxSpanLong = bounds.maxLat - bounds.minLat;
+        const maxSpanLat = bounds.maxLon - bounds.minLon;
+        const MaxSpan = maxSpanLong > maxSpanLat ? maxSpanLong : maxSpanLat;
+
+        const scaleConstant = 0.0000018;
+        const calculatedScale = (width / MaxSpan) * scaleConstant;
+    
         const centerLat = (bounds.minLat + bounds.maxLat) / 2;
         const centerLon = (bounds.minLon + bounds.maxLon) / 2;
-
+        
         // create a Path2D object for main and minor roads to act as buffer
-        const mainPaths = new Path2D();
-        const minorPaths = new Path2D();
+        const pathLayers = {
+            express: new Path2D(),
+            arterial: new Path2D(),
+            local: new Path2D(),
+            service: new Path2D(),
+            pedestrian: new Path2D(),
+            nature: new Path2D(),
+            transit: new Path2D()
+        };
+        let roadTypes = {};
         //process roads
         roads.forEach(road => {
             //project first to meters
             const projectedPoints = road.coordinates.map(p => 
-                projectCoordinateToMeters(p[0], p[1], centerLat, centerLon, 10)
+                projectCoordinateToMeters(p[0], p[1], centerLat, centerLon, 5)
             );
 
             // simplifyt to reduce points and aid CPU - scale 2m
@@ -61,27 +97,46 @@ export default function App() {
             // if not road skip
             if (simplified.length < 2) return;
 
-            const isMain = ["motorway", "trunk", "primary", "secondary"].includes(road.type);
-            const targetPath = isMain ? mainPaths : minorPaths;
-
+            const type = road.type;
+            let targetPath;
+            // if (roadTypes[type]) {
+            //     roadTypes[type]++;
+            // } else {
+            //     roadTypes[type] = 1;
+            // }
+            
+            if (['motorway', 'motorway_link', 'trunk', 'trunk_link'].includes(type)) {
+                targetPath = pathLayers.express;
+            } else if (['primary', 'primary_link', 'secondary', 'secondary_link'].includes(type)) {
+                targetPath = pathLayers.arterial;
+            } else if (['tertiary', 'tertiary_link', 'residential', 'unclassified', 'living_street', 'road'].includes(type)) {
+                targetPath = pathLayers.local;
+            } else if (['service', 'alley', 'services', 'driveway', 'passing_place'].includes(type)) {
+                targetPath = pathLayers.service;
+            } else if (['footway', 'pedestrian', 'corridor', 'platform', 'sidewalk'].includes(type)) {
+                targetPath = pathLayers.pedestrian;
+            } else if (['path', 'steps', 'cycleway', 'track', 'bridleway', 'staircase'].includes(type)) {
+                targetPath = pathLayers.nature;
+            } else {
+                targetPath = pathLayers.transit; 
+            }
+        
             targetPath.moveTo(simplified[0][0], simplified[0][1]);
             for (let i = 1; i < simplified.length; i++) {
                 targetPath.lineTo(simplified[i][0], simplified[i][1]);
             }
             if (road.isClosed) targetPath.closePath();
         });
-
-        setPathObjects({ mainPaths, minorPaths });
+        // console.log(roadTypes);
+        setPathObjects(pathLayers);
         setRenderDuration((performance.now() - startTime).toFixed(2));
-
         // Reset camera to center
         if (containerRef.current) {
-             const cx = containerRef.current.clientWidth / 2;
-             const cy = containerRef.current.clientHeight / 2;
-             setTransform({ scale: 0.04, x: cx, y: cy });
+            const cx = containerRef.current.clientWidth / 2;
+            const cy = containerRef.current.clientHeight / 2;
+            setTransform({ scale: calculatedScale, x: cx, y: cy });
         }
-
-    }, [rawRoads]);
+    }, [processedData]);
 
     // MARK: Draw/Render Logic
     useEffect(() => {
@@ -91,6 +146,7 @@ export default function App() {
 
         const canvasContext = canvas.getContext("2d");
         const { width, height } = canvas;
+        const { scale, x, y } = transform;
 
         // clear canvas
         canvasContext.fillStyle = "#fbfffa";
@@ -100,33 +156,45 @@ export default function App() {
         // push state
         canvasContext.save();
         //move canvas origins
-        canvasContext.translate(transform.x, transform.y);
+        canvasContext.translate(x, y);
         // scale values
-        canvasContext.scale(transform.scale, transform.scale);
+        canvasContext.scale(scale, scale);
 
-        // draw minor roads
-        canvasContext.lineWidth = 0.7/ transform.scale;
-        if (canvasContext.lineWidth < 0.5) canvasContext.lineWidth = 0.5; //min
-        canvasContext.strokeStyle = "#2c2c2c";
-        // Only render minor roads when zoomed in
-        if (transform.scale > 0.0005) {
-            canvasContext.stroke(pathObjects.minorPaths);
+        for (let i = 0; i < LAYER_KEYS.length; i++) {
+            const key = LAYER_KEYS[i];
+            const config = LAYER_CONFIG[key];
+
+            if (!visibleLayers[key] || scale <= config.minScale) {
+                continue;
+            }
+
+            const path = pathObjects[key];
+            if (!path) continue;
+
+            // 3. Batch Context Updates
+            canvasContext.strokeStyle = config.color;
+            
+            // Calculate responsive line width
+            let lineWidth = config.weight / scale;
+            if (lineWidth < 0.25) lineWidth = 0.25; // Floor to keep visible
+            canvasContext.lineWidth = lineWidth;
+
+            canvasContext.lineJoin = "round";
+            canvasContext.lineCap = "round";
+
+            // 4. The Draw Call
+            canvasContext.stroke(path);
         }
 
-        // draw main roads
-        canvasContext.lineWidth = 1.7 / transform.scale;
-        canvasContext.strokeStyle = "#333";
-        canvasContext.stroke(pathObjects.mainPaths);
         canvasContext.restore();
 
-    }, [pathObjects, transform]);
+    }, [pathObjects, transform, visibleLayers]);
 
     // MARK: Camera Control
     useEffect(() => {
         const canvas = canvasRef.current;
         //early return
         if (!canvas) return;
-        
         const handleMouseDown = (e) => {
             isDragging.current = true;
             lastMousePos.current = { x: e.clientX, y: e.clientY };
@@ -137,9 +205,17 @@ export default function App() {
             if (!isDragging.current) return;
             const deltax = e.clientX - lastMousePos.current.x;
             const deltay = e.clientY - lastMousePos.current.y;
-            
-            setTransform(prev => ({ ...prev, x: prev.x + deltax, y: prev.y + deltay }));
             lastMousePos.current = { x: e.clientX, y: e.clientY };
+            
+            if (rafId.current) cancelAnimationFrame(rafId.current);
+        
+            rafId.current = requestAnimationFrame(() => {
+                setTransform(prev => ({ 
+                    ...prev, 
+                    x: prev.x + deltax,
+                    y: prev.y + deltay
+                }));
+            });
         };
         
         const handleMouseUp = () => {
@@ -178,7 +254,7 @@ export default function App() {
             window.removeEventListener("mouseup", handleMouseUp);
             canvas.removeEventListener("wheel", handleWheel);
         };
-    }, []); // listeners attached once on mount
+    }, []); //run on mount only
 
     // MARK: responsive canvas resizer
     useLayoutEffect(() => {
@@ -197,38 +273,11 @@ export default function App() {
         return () => window.removeEventListener("resize", debouncedUpdate);
     }, []);
 
-    const query = `[timeout:2700][out:json];area(${city.areaId})->.searchArea; (way["highway"](area.searchArea);way["junction"="roundabout"](area.searchArea););out geom;`;
-    const {newData, isRoadsError, isRoadsPending, newError} = useQuery({
-    queryKey: ['roadsData', query],
-    queryFn: () => recursiveFetch(urlArray, query),
-    retry: false
-    })
-    const handleCitySelect = async (city) => {
-        setRawRoads(null); // clear previous map
-        
-        
-        // only parse here
-        const responseRoads = newData.elements.reduce((acc, el) => {
-            if (el.type !== "way" || !el.geometry) return acc;
-            // Calculate bounds locally
-            el.geometry.forEach(p => {
-                const { lat, lon } = p;
-                if (lat < acc.bounds.minLat) acc.bounds.minLat = lat;
-                if (lat > acc.bounds.maxLat) acc.bounds.maxLat = lat;
-                if (lon < acc.bounds.minLon) acc.bounds.minLon = lon;
-                if (lon > acc.bounds.maxLon) acc.bounds.maxLon = lon;
-            });
-            acc.roads.push({
-                type: el.tags?.highway || "unclassified",
-                //roundabouts
-                isClosed: el.nodes[0] === el.nodes[el.nodes.length - 1],
-                coordinates: el.geometry.map(p => [p.lat, p.lon])
-            });
-            return acc;
-        }, { roads: [], bounds: { minLat: 90, maxLat: -90, minLon: 180, maxLon: -180 } });
-
-        setRawRoads(responseRoads); // trigger step1
-        setSuggestions([]);
+    const handleCitySelect = (city) => {
+        setPathObjects(null);
+        setRenderDuration(null);
+        setFetchDuration(null);
+        setQueryCity(city);
     };
     const handleOnChange = (e) => {
         setInputValue(e.target.value);
@@ -236,95 +285,159 @@ export default function App() {
 
     useEffect(() => {
         let timer = setTimeout(() => {
+            setPathObjects(null);
             setInputQuery(inputValue);
         }, 500);
         return () => clearTimeout(timer);
     }, [inputValue]);
 
-    const { data, isError, isPending, error } = useQuery({
+    //MARK: get city suggestions
+    const { data:cityData, isError:isCityError, isFetching:isCityFetching, error } = useQuery({
         queryKey: ['cityQuery', inputQuery],
         queryFn: () => fetchCitySuggestions(inputQuery),
         enabled: inputQuery.length > 2,
+        retry: false,
         staleTime: 1000 * 60 * 5
     })
 
     return (
-        <div className="page-container" ref={containerRef}>
-            <div className="search-overlay">
-                <div className="search-card">
-                    <h1 className="title">City Frames</h1>
-                    {/* MARK: search form */}
-                    <form className="search-form">
-                        <input 
-                            type="text"
-                            className="search-input"
-                            placeholder="Enter city name..."
-                            value={inputValue}
-                            onChange={(e) => handleOnChange(e)}
-                            disabled={isLoading}
-                        />
-                        {isLoading && (
-                            <div className="spinner-overlay">
-                                <svg className="spinner-svg" viewBox="0 0 50 50">
-                                    <circle className="spinner-path" cx="25" cy="25" r="20" fill="none" strokeWidth="5"></circle>
-                                </svg>
-                            </div>
-                        )}
-                        <button
-                            type="submit"
-                            className="button submit-button"
-                            disabled={isLoading || !inputValue}
-                        >
-                            Search
-                        </button>
-                    </form>
-
-                    {error && <div className="error-message">{error}</div>}
-                    {/* MARK: Render City Suggestions */}
-                    <div className="results-container">
-                        {data?.map((city, i) => (
-                            <div key={i} className="suggestion-item" onClick={() => handleCitySelect(city)}>
-                                <span className="city-name">{city.display_name.split(",")[0]}</span>
-                                <span className="city-meta">{city.display_name}</span>
-                                <span className="city-name">{city.type}</span>
-                                <span className="city-meta">{city.lat} / {city.lon}</span>
-
-                            </div>
-                        ))}
+    <div className={style.pageContainer} ref={containerRef}>
+        <div className={style.searchOverlay}>
+        {isCollapsed ? (
+            /* --- COLLAPSED STATE (The Circle/Square) --- */
+            <button 
+            className={style.collapsedTrigger} 
+            onClick={() => setIsCollapsed(false)}
+            aria-label="Expand search UI"
+            >
+            <div className={style.squareIcon} />
+            </button>
+        ) : (
+            /* --- EXPANDED STATE (The Card) --- */
+            <div className={style.searchCard}>
+            <button 
+                className={style.closeButton} 
+                onClick={() => setIsCollapsed(true)}
+                aria-label="Hide search UI"
+            >
+                ✕
+            </button>
+            
+            <h1 className={style.title}>City Frames</h1>
+            
+            <form className={style.searchForm} onSubmit={(e) => e.preventDefault()}>
+                <div className={style.searchWrapper}>
+                <input 
+                    type="text"
+                    className={style.searchInput}
+                    placeholder="Enter city name..."
+                    value={inputValue}
+                    onChange={handleOnChange}
+                />
+                {isCityFetching && (
+                    <div className={style.inputLoader}>
+                    <div className={style.spinnerSmall} />
                     </div>
-
-                    {pathObjects && (
-                        <div className="roads-info">
-                            <div className="stat-row">
-                                <label style={{fontSize: "0.75rem", color: "#666"}}>Roads loaded</label>
-                                <span>{rawRoads?.roads.length.toLocaleString()}</span>
-                            </div>
-                            {renderDuration && (
-                                <div className="stat-row">
-                                    <label style={{fontSize: "0.75rem", color: "#666"}}>Render duration</label>
-                                    <span>{renderDuration}ms</span>
-                                </div>
-                            )}
-                            <div className="stat-row" style={{marginTop: "4px"}}>
-                                <label style={{fontSize: "0.75rem", color: "#666"}}>Network fetch duration</label>
-                                <span>{fetchDuration}ms</span>
-                            </div>
-                            <button className="button clear-button" onClick={() => {
-                                setRawRoads(null);
-                                setPathObjects(null);
-                                setInputValue("");
-                                setSuggestions([]);
-                            }}>
-                                Clear Map
-                            </button>
-                        </div>
-                    )}
+                )}
                 </div>
+            </form>
+
+            {isCityError && (
+                <div className={style.errorMessage}>
+                {error.message ?? "Something went horribly wrong!"}
+                </div>
+            )}
+
+            <div className={style.resultsList}>
+                {!pathObjects && !isRoadFetching && inputValue.length > 0 && 
+                cityData?.map((city, i) => (
+                    <div key={i} className={style.suggestionItem} onClick={() => handleCitySelect(city)}>
+                    <span className={style.cityName}>{city.display_name.split(",")[0]}</span>
+                    <span className={style.cityMeta}>{city.display_name}</span>
+                    <div className={style.infoPanelSecondary}>
+                        <span className={style.cityType}>{city.type}</span>
+                        <span className={style.cityCoords}>{parseFloat(city.lat).toFixed(2)} / {parseFloat(city.lon).toFixed(2)}</span>
+                    </div>
+                    </div>
+                ))
+                }
             </div>
 
-            <div id="map-container">
-                <canvas ref={canvasRef} style={{ width: "100%", height: "100%", display: "block", cursor: isDragging.current ? "grabbing" : "grab" }} />
+            {pathObjects && (
+                <div className={style.infoPanel}>
+                <div className={style.statsGrid}>
+                    <div className={style.statItem}>
+                    <label>Roads Loaded</label>
+                    <span>{processedData?.roads.length.toLocaleString()}</span>
+                    </div>
+                    {renderDuration && (
+                    <div className={style.statItem}>
+                        <label>Render Time</label>
+                        <span>{renderDuration}ms</span>
+                    </div>
+                    )}
+                    <div className={style.statItem}>
+                    <label>Network</label>
+                    <span>{fetchDuration}ms</span>
+                    </div>
+                </div>
+
+                <div className={style.layerToggles}>
+                    <p className={style.sectionLabel}>Map Layers</p>
+                    {Object.keys(visibleLayers).map(layer => (
+                    <label key={layer} className={style.layerLabel}>
+                        <input 
+                        type="checkbox" 
+                        checked={visibleLayers[layer]} 
+                        onChange={() => setVisibleLayers(prev => ({...prev, [layer]: !prev[layer]}))}
+                        />
+                        <span>{layer.charAt(0).toUpperCase() + layer.slice(1)}</span>
+                        <div 
+                        className={style.colorDot} 
+                        style={{ '--layer-color': LAYER_CONFIG[layer]?.color }} 
+                        />
+                    </label>
+                    ))}
+                </div>
+
+                <button className={style.buttonSecondary} onClick={(e) => {
+                    e.preventDefault();
+                    setQueryCity(null);
+                    setPathObjects(null);
+                    setInputValue("");
+                    queryClient.removeQueries({ queryKey: ['cityQuery'] });
+                }}>
+                    Clear Map
+                </button>
+                </div>
+            )}
             </div>
+        )}
         </div>
+
+        <div className={style.mapViewport}>
+        {isRoadFetching && (
+            <div className={style.loadingScreen}>
+            <div className={style.loadingCard}>
+                <div className={style.spinnerLarge} />
+                <h2>Building City Network</h2>
+                <p>
+                Attempting to fetch data from source <strong>{currentMirrorIndex + 1}</strong> of 5
+                </p>
+                <button 
+                className={`${style.buttonSecondary} ${style.btnCancel}`} 
+                onClick={() => {
+                    queryClient.cancelQueries({ queryKey: ["roads"]});
+                    setQueryCity(null);
+                }}
+                >
+                Cancel Map Fetch
+                </button>
+            </div>
+            </div>
+        )}
+        <canvas ref={canvasRef} className={style.canvas} />
+        </div>
+    </div>
     );
 }

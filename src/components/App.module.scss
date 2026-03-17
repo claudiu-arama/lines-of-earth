@@ -1,0 +1,458 @@
+// App.module.scss
+
+// --- Variables ---
+$bg-app: #f8fafc;
+$accent: #10b981; // Emerald green
+$text-main: #0f172a;
+$text-muted: #64748b;
+$border-color: rgba(0, 0, 0, 0.08);
+$glass-bg: rgba(255, 255, 255, 0.8);
+$radius-lg: 12px;
+$radius-md: 10px;
+$shadow-sm: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+$shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+// --- Layout ---
+.pageContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: $bg-app;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  display: flex;
+}
+
+.searchOverlay {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  z-index: 100;
+  width: 340px;
+  pointer-events: none; // Allows clicking the map behind empty space
+}
+
+.searchCard {
+  position: relative;
+  pointer-events: auto;
+  background: $glass-bg;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: $radius-lg;
+  padding: 24px;
+  box-shadow: $shadow-lg;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: $text-muted;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: $text-main;
+  }
+}
+
+.collapsedTrigger {
+  pointer-events: auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: $glass-bg;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: $shadow-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+    background: #ffffff;
+  }
+}
+
+.squareIcon {
+  width: 16px;
+  height: 16px;
+  background-color: $text-main;
+  border-radius: 2px;
+}
+
+// Ensure the suggestion list results info also respects the container
+.roadsInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// --- Typography ---
+.title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: $text-main;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+// --- Search Input (Base UI Styled) ---
+.searchWrapper {
+  position: relative;
+  
+  .searchInput {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: $radius-md;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    font-size: 0.95rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: $text-main;
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
+    }
+  }
+
+  .inputLoader {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+// --- Results List ---
+.resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+}
+
+.suggestionItem {
+  all: unset;
+  display: block;
+  padding: 12px;
+  border-radius: $radius-md;
+  background: #ffffff;
+  border: 1px solid $border-color;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.2s;
+
+  &:hover {
+    border-color: $text-main;
+    background: #f8fafc;
+  }
+
+  &:active { transform: scale(0.98); }
+
+  .cityName {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: $text-main;
+  }
+
+  .cityMeta {
+    font-size: 0.75rem;
+    color: $text-muted;
+    display: block;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// --- Stats & Info ---
+.infoPanel {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  .statItem {
+    label { 
+      font-size: 0.65rem; 
+      font-weight: 700; 
+      color: $text-muted; 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em;
+    }
+    span { 
+      display: block;
+      font-size: 0.9rem; 
+      font-weight: 700; 
+      color: $accent; 
+    }
+  }
+}
+
+// --- Layer Toggles ---
+.sectionLabel {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: $text-muted;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+
+  .toggleText {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #334155;
+  }
+
+  .colorDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+}
+
+// --- Base UI Checkbox Styling ---
+.checkboxRoot {
+  all: unset;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: #fff;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &[data-state="checked"] {
+    background: $text-main;
+    border-color: $text-main;
+  }
+
+  &:hover { border-color: $text-main; }
+}
+
+.checkboxIndicator {
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") no-repeat center;
+  mask-size: contain;
+}
+
+// --- Buttons ---
+.buttonSecondary {
+  all: unset;
+  padding: 12px;
+  background: #f1f5f9;
+  border-radius: $radius-md;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover {
+    background: #e2e8f0;
+    color: $text-main;
+  }
+}
+
+// --- Loading State (Dialog Overlay) ---
+.loadingScreen {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingCard {
+  background: #fff;
+  padding: 40px;
+  border-radius: $radius-lg + 8px;
+  box-shadow: $shadow-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  max-width: 320px;
+  
+  h2 { font-size: 1.1rem; margin: 0; font-weight: 800; }
+  p { font-size: 0.85rem; color: $text-muted; line-height: 1.5; margin: 0; }
+}
+
+// --- Spinners & Animations ---
+.spinnerSmall {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0,0,0,0.1);
+  border-top-color: $text-main;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.spinnerLarge {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f1f5f9;
+  border-top: 4px solid $text-main;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// --- Canvas & Error States ---
+.mapViewport {
+  width: 100%;
+  height: 100%;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.errorMessage {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: $radius-md;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid #fee2e2;
+}
+
+.searchForm {
+  margin: 0;
+  padding: 0;
+}
+
+// Adjust the grid for 3 items if necessary
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 12px;
+}
+
+.loadingText {
+  h2 {
+    margin-bottom: 8px;
+    color: $text-main;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+// Ensure native checkboxes don't look too jarring alongside the clean text
+input[type="checkbox"] {
+  accent-color: $text-main;
+  width: 16px;
+  height: 16px;
+}
+.statItem {
+  display: flex;
+  flex-direction: column;
+
+  label { 
+    font-size: 0.75rem; // Moved from inline
+    font-weight: 500;
+    color: $text-muted; 
+    text-transform: none; 
+    letter-spacing: normal;
+  }
+  
+  span { 
+    font-size: 0.9rem; 
+    font-weight: 700; 
+    color: $text-main; // Standardized
+  }
+}
+
+.cityType {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $accent;
+  text-transform: uppercase;
+}
+
+.cityCoords {
+  font-size: 0.75rem;
+  color: $text-muted;
+}
+
+.layerLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.colorDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: auto;
+  // We use a CSS variable for the dynamic color
+  background-color: var(--layer-color, #ccc);
+}
+
+.btnCancel {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  margin-top: 12px;
+  
+  &:hover {
+    background: #fee2e2 !important;
+  }
+}
