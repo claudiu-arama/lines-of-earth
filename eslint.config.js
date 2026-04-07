@@ -11,7 +11,6 @@ export default defineConfig([
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
-
     languageOptions: {
       parser: tsParser,
       ecmaVersion: 'latest',
@@ -20,26 +19,29 @@ export default defineConfig([
         ...globals.browser
       }
     },
-
     plugins: {
       '@typescript-eslint': tsPlugin,
       react,
       'react-hooks': reactHooks
     },
-
     settings: {
       react: { version: 'detect' }
     },
-
     rules: {
+      /*
+       * Formatting
+       */
+      'indent': ['warn', 4, { SwitchCase: 1 }],
+      '@typescript-eslint/indent': ['warn', 4, { SwitchCase: 1 }],
+
       /*
        * Base
        */
-      'no-unused-vars': 'off', // disable JS version
+      'no-unused-vars': 'off',
       'no-console': 'warn',
 
       /*
-       * TypeScript basic
+       * TypeScript
        */
       '@typescript-eslint/no-unused-vars': [
         'warn',

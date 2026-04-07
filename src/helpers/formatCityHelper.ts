@@ -1,18 +1,43 @@
 export const responseRoads = (newData) => newData?.elements.reduce((acc, el) => {
-            if (el.type !== "way" || !el.geometry) return acc;
-            // Calculate bounds locally
-            el.geometry.forEach(p => {
-                const { lat, lon } = p;
-                if (lat < acc.bounds.minLat) acc.bounds.minLat = lat;
-                if (lat > acc.bounds.maxLat) acc.bounds.maxLat = lat;
-                if (lon < acc.bounds.minLon) acc.bounds.minLon = lon;
-                if (lon > acc.bounds.maxLon) acc.bounds.maxLon = lon;
-            });
-            acc.roads.push({
-                type: el.tags?.highway || "unclassified",
-                //roundabouts
-                isClosed: el.nodes[0] === el.nodes[el.nodes.length - 1],
-                coordinates: el.geometry.map(p => [p.lat, p.lon])
-            });
-            return acc;
-        }, { roads: [], bounds: { minLat: 90, maxLat: -90, minLon: 180, maxLon: -180 } });
+    if (!["way", "relation", "node"].includes(el.type)) return acc;
+
+    const tags = el.tags || {};
+    let category = tags.amenity || tags.leisure || tags.tourism || tags.historic || tags.building || tags.railway || tags.highway || "unclassified";
+
+    const updateBounds = (p) => {
+        if (p.lat < acc.bounds.minLat) acc.bounds.minLat = p.lat;
+        if (p.lat > acc.bounds.maxLat) acc.bounds.maxLat = p.lat;
+        if (p.lon < acc.bounds.minLon) acc.bounds.minLon = p.lon;
+        if (p.lon > acc.bounds.maxLon) acc.bounds.maxLon = p.lon;
+    };
+
+    const processGeometry = (geometry) => {
+        if (!geometry || geometry.length < 2) return null;
+        geometry.forEach(updateBounds);
+        
+        const first = geometry[0];
+        const last = geometry[geometry.length - 1];
+        const isActuallyClosed = first.lat === last.lat && first.lon === last.lon;
+
+        return {
+            type: category,
+            isClosed: isActuallyClosed,
+            coordinates: geometry.map(p => [p.lat, p.lon])
+        };
+    };
+
+    if (el.type === "way") {
+        const road = processGeometry(el.geometry);
+        if (road) acc.roads.push(road);
+    } 
+    else if (el.type === "relation" && el.members) {
+        el.members.forEach(member => {
+            if (member.type === "way") {
+                const road = processGeometry(member.geometry);
+                if (road) acc.roads.push(road);
+            }
+        });
+    }
+
+    return acc;
+}, { roads: [], bounds: { minLat: 90, maxLat: -90, minLon: 180, maxLon: -180 } });

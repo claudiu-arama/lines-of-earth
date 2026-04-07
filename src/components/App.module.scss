@@ -1,5 +1,7 @@
-// App.module.scss
-
+body {
+  margin: 0;
+  padding: 0;
+}
 // --- Variables ---
 $bg-app: #f8fafc;
 $accent: #10b981; // Emerald green
@@ -9,8 +11,12 @@ $border-color: rgba(0, 0, 0, 0.08);
 $glass-bg: rgba(255, 255, 255, 0.8);
 $radius-lg: 12px;
 $radius-md: 10px;
-$shadow-sm: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-$shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+$shadow-sm:
+  0 10px 25px -5px rgba(0, 0, 0, 0.05),
+  0 8px 10px -6px rgba(0, 0, 0, 0.05);
+$shadow-lg:
+  0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  0 8px 10px -6px rgba(0, 0, 0, 0.1);
 
 // --- Layout ---
 .pageContainer {
@@ -18,7 +24,11 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   width: 100vw;
   height: 100vh;
   background-color: $bg-app;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
   overflow: hidden;
   display: flex;
 }
@@ -27,13 +37,13 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   position: absolute;
   top: 32px;
   left: 32px;
-  z-index: 100;
+  z-index: 20;
   width: 340px;
-  pointer-events: none; // Allows clicking the map behind empty space
+  pointer-events: none;
 }
 
 .searchCard {
-  position: relative;
+  position: fixed;
   pointer-events: auto;
   background: $glass-bg;
   backdrop-filter: blur(12px);
@@ -45,6 +55,8 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-width: 320px;
+  width: 100%;
 }
 
 .closeButton {
@@ -62,6 +74,30 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
 
   &:hover {
     color: $text-main;
+  }
+}
+
+.mapViewport {
+  position: relative;
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.heroBackground {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.9);
+  transition: opacity 0.8s ease-in-out;
+
+  &.loading {
+    filter: blur(20px);
+    transform: scale(1.1);
   }
 }
 
@@ -93,14 +129,12 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   border-radius: 2px;
 }
 
-// Ensure the suggestion list results info also respects the container
 .roadsInfo {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-// --- Typography ---
 .title {
   font-size: 1.25rem;
   font-weight: 800;
@@ -109,10 +143,9 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   letter-spacing: -0.025em;
 }
 
-// --- Search Input (Base UI Styled) ---
 .searchWrapper {
   position: relative;
-  
+
   .searchInput {
     width: 100%;
     padding: 12px 14px;
@@ -138,7 +171,6 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   }
 }
 
-// --- Results List ---
 .resultsList {
   display: flex;
   flex-direction: column;
@@ -147,8 +179,13 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   overflow-y: auto;
   padding-right: 4px;
 
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
 }
 
 .suggestionItem {
@@ -159,14 +196,18 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   background: #ffffff;
   border: 1px solid $border-color;
   cursor: pointer;
-  transition: transform 0.1s, border-color 0.2s;
+  transition:
+    transform 0.1s,
+    border-color 0.2s;
 
   &:hover {
     border-color: $text-main;
     background: #f8fafc;
   }
 
-  &:active { transform: scale(0.98); }
+  &:active {
+    transform: scale(0.98);
+  }
 
   .cityName {
     display: block;
@@ -186,7 +227,6 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   }
 }
 
-// --- Stats & Info ---
 .infoPanel {
   border-top: 1px solid #e2e8f0;
   padding-top: 16px;
@@ -201,23 +241,22 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   gap: 12px;
 
   .statItem {
-    label { 
-      font-size: 0.65rem; 
-      font-weight: 700; 
-      color: $text-muted; 
-      text-transform: uppercase; 
+    label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: $text-muted;
+      text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    span { 
+    span {
       display: block;
-      font-size: 0.9rem; 
-      font-weight: 700; 
-      color: $accent; 
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: $accent;
     }
   }
 }
 
-// --- Layer Toggles ---
 .sectionLabel {
   font-size: 0.7rem;
   font-weight: 800;
@@ -247,7 +286,6 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   }
 }
 
-// --- Base UI Checkbox Styling ---
 .checkboxRoot {
   all: unset;
   width: 20px;
@@ -266,14 +304,17 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
     border-color: $text-main;
   }
 
-  &:hover { border-color: $text-main; }
+  &:hover {
+    border-color: $text-main;
+  }
 }
 
 .checkboxIndicator {
   width: 10px;
   height: 10px;
   background: #fff;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E")
+    no-repeat center;
   mask-size: contain;
 }
 
@@ -319,16 +360,24 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   gap: 20px;
   text-align: center;
   max-width: 320px;
-  
-  h2 { font-size: 1.1rem; margin: 0; font-weight: 800; }
-  p { font-size: 0.85rem; color: $text-muted; line-height: 1.5; margin: 0; }
+
+  h2 {
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 800;
+  }
+  p {
+    font-size: 0.85rem;
+    color: $text-muted;
+    line-height: 1.5;
+    margin: 0;
+  }
 }
 
-// --- Spinners & Animations ---
 .spinnerSmall {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(0,0,0,0.1);
+  border: 2px solid rgba(0, 0, 0, 0.1);
   border-top-color: $text-main;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
@@ -344,7 +393,9 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // --- Canvas & Error States ---
@@ -356,7 +407,8 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
 .canvas {
   width: 100%;
   height: 100%;
-  display: block;
+  z-index: 10;
+  position: relative;
 }
 
 .errorMessage {
@@ -374,7 +426,6 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   padding: 0;
 }
 
-// Adjust the grid for 3 items if necessary
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
@@ -391,7 +442,6 @@ $shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0
   }
 }
 
-// Ensure native checkboxes don't look too jarring alongside the clean text
 input[type="checkbox"] {
   accent-color: $text-main;
   width: 16px;
@@ -401,18 +451,18 @@ input[type="checkbox"] {
   display: flex;
   flex-direction: column;
 
-  label { 
-    font-size: 0.75rem; // Moved from inline
+  label {
+    font-size: 0.75rem;
     font-weight: 500;
-    color: $text-muted; 
-    text-transform: none; 
+    color: $text-muted;
+    text-transform: none;
     letter-spacing: normal;
   }
-  
-  span { 
-    font-size: 0.9rem; 
-    font-weight: 700; 
-    color: $text-main; // Standardized
+
+  span {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $text-main;
   }
 }
 
@@ -443,7 +493,6 @@ input[type="checkbox"] {
   height: 8px;
   border-radius: 50%;
   margin-left: auto;
-  // We use a CSS variable for the dynamic color
   background-color: var(--layer-color, #ccc);
 }
 
@@ -451,7 +500,7 @@ input[type="checkbox"] {
   background: #fef2f2 !important;
   color: #dc2626 !important;
   margin-top: 12px;
-  
+
   &:hover {
     background: #fee2e2 !important;
   }
