@@ -2,13 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { getRoadsQuery} from "../../helpers/queryHelpers";
 import { recursiveFetch } from "../../helpers/overpassService";
 import { arrayofAPIs as api } from "../../constants/apis";
-import { useQueryClient } from "@tanstack/react-query";
 
-export const useRoadsData = (queryCity, options, setCurrentMirrorIndex, setFetchDuration) => {
-  const queryClient = useQueryClient();
-
+export const useRoadsData = (queryCity, options, setCurrentMirrorIndex, setFetchDuration, queryClient) => {
   return useQuery({
-    queryKey: ["roads", queryCity?.osm_id ?? null],
+    queryKey: ["roads", queryCity?.areaId ?? null],
     queryFn: async ({ signal }) => {
       if (!queryCity) throw new Error("No city selected");
         return await recursiveFetch(
@@ -18,7 +15,9 @@ export const useRoadsData = (queryCity, options, setCurrentMirrorIndex, setFetch
           setCurrentMirrorIndex,
           signal,
           performance.now(),
-          setFetchDuration
+          setFetchDuration,
+          queryClient,
+          queryCity
         );
     },
       ...options,

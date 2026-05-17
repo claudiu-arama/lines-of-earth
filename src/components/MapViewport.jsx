@@ -1,5 +1,6 @@
 import styles from "./MapViewport.module.scss";
-import { FRAME_CONFIG } from "../constants/layerConfigs";
+import { FRAME_CONFIG, LAYER_CONFIG } from "../constants/layerConfigs";
+import { CityLabel } from "./CityLabel";
 
 export function MapViewport({
     canvasRef,
@@ -15,6 +16,9 @@ export function MapViewport({
     bgImageSource,
     blurredPlaceholder,
     apiLength,
+    isRoadsSuccess,
+    isRoadError,
+    layerColors
 }) {
     const hasMap = !!pathObjects;
 
@@ -49,22 +53,35 @@ export function MapViewport({
                   style={showFrame && hasMap ? frameCSSVars : undefined}>
                     <div className={`${styles.mat} ${showFrame && hasMap ? styles.matVisible : styles.matHidden}`}>
                         <div className={`${styles.doubleFrame} ${showFrame && hasMap ? styles.doubleFrameVisible : styles.doubleFrameHidden}`}>
-                            <canvas
-                                ref={canvasRef}
-                                className={`${styles.canvas} ${hasMap ? "" : styles.canvasHidden}`}
-                            />
+                            <div style={{ position: "relative", width: "100%", height: "100%" }}>
+                                <canvas
+                                    ref={canvasRef}
+                                    className={`${styles.canvas} ${hasMap ? "" : styles.canvasHidden}`}
+                                />
+                                {showFrame && hasMap && (
+                                    <CityLabel
+                                    cityName="Lisbon"
+                                    country="Portugal"
+                                    message="A city of seven hills"
+                                    variant="fade"
+                                    bgColor={layerColors['canvas'] || LAYER_CONFIG.canvas.color}
+                                    accentColor="#1a1a1a"
+                                    fontColor="#1a1a1a"
+                                    />
+                                )}
+                                </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {isRoadFetching && (
+            {isRoadFetching && !isRoadsSuccess && (
                 <div className={styles.loadingScreen}>
                     <div className={styles.loadingCard}>
                         <div className={styles.spinnerLarge} />
                         <h2 className={styles.loadingTitle}>Building City Network</h2>
                         <p className={styles.loadingSubtitle}>
-                            Fetching from mirror <strong>{currentMirrorIndex + 1}</strong> of {apiLength}
+                            {isRoadError}
+                            Getting data from server <strong>{currentMirrorIndex + 1}</strong> of {apiLength}
                         </p>
                         <button className={styles.cancelButton} onClick={onCancelFetch}>
                             Cancel

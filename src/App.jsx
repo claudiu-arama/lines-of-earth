@@ -8,7 +8,7 @@ const queryClient = new QueryClient({
     },
   },
 })
-function App() {
+export default function App() {
     return (
         <div>
             <QueryClientProvider client={queryClient}>
@@ -17,5 +17,3 @@ function App() {
         </div>
     );
 }
-
-export default App;

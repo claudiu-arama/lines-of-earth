@@ -1,0 +1,106 @@
+@import "./_variables";
+
+.suggestionItem {
+  all: unset;
+  display: block;
+  padding: 10px 12px;
+  background: $paper;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+
+  border-bottom: 1px solid $ink-light;
+
+  &:hover {
+    background: #fff;
+    border-color: $ink;
+  }
+
+  &:active {
+    background: $ink;
+    color: $paper;
+
+    .cityName,
+    .cityMeta,
+    .cityCoords {
+      color: $paper;
+    }
+
+    .cityType {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &.active {
+    background: $ink;
+    color: $paper;
+
+    .cityName,
+    .cityMeta,
+    .cityCoords {
+      color: $paper;
+    }
+
+    .cityType {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: transparent;
+    transition: background 0.12s;
+  }
+
+  &:hover::before {
+    background: $ink;
+  }
+
+  &.active::before {
+    background: $paper;
+  }
+}
+
+.cityName {
+  display: block;
+  font-family: $mono;
+  font-weight: 700;
+  font-size: 12px;
+  color: $ink;
+  letter-spacing: 0.04em;
+}
+
+.cityMeta {
+  font-family: $mono;
+  font-size: 10px;
+  color: $ink-muted;
+  display: block;
+  margin-top: 2px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cityType {
+  font-family: $mono;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #2ecc71;
+  margin-top: 4px;
+}
+
+.cityCoords {
+  font-family: $mono;
+  font-size: 9px;
+  color: $ink-muted;
+  margin-top: 2px;
+}
