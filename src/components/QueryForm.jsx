@@ -1,34 +1,38 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import style from "./App.module.scss";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCitySuggestions } from "../helpers/nominatimService.js";
-import { useRoadsData } from "../hooks/data/useRoadsData.js";
-import { responseRoads } from "../helpers/formatCityHelper.js";
+import { fetchCitySuggestions } from "../helpers/nominatimService";
+import { useRoadsData } from "../hooks/data/useRoadsData";
+import { responseRoads } from "../helpers/formatCityHelper";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapControls } from "./MapControls.jsx";
+import { MapControls } from "./MapControls";
 import placeholderImg from "../assets/placeholder.webp";
 import fallbackImg from "../assets/fallback.png";
-import { BLURRED_PLACEHOLDER } from "../constants/staticConstants.js";
-import { MapViewport } from "../components/MapViewport.jsx";
-import {arrayofAPIs as api} from "../constants/apis.js";
-import { usePrecalculatePaths } from "../hooks/data/usePrecalculatePaths.js";
-import { useDrawLogic } from "../hooks/ui/useDrawLogic.js";
-import { useBackgroundImage } from "../hooks/ui/useBackgroundImage.js";
-import { useCenterCanvas } from "../hooks/ui/useCenterCanvas.js";
-import { useCanvasResizer } from "../hooks/ui/useCanvasResizer.js";
-import { useCameraControls } from "../hooks/ui/useCameraControls.js";
-import { LAYER_CONFIG } from "../constants/layerConfigs.js";
+import { BLURRED_PLACEHOLDER } from "../constants/staticConstants";
+import { MapViewport } from "../components/MapViewport";
+import {arrayofAPIs as api} from "../constants/apis";
+import { usePrecalculatePaths } from "../hooks/data/usePrecalculatePaths";
+import { useDrawLogic } from "../hooks/ui/useDrawLogic";
+import { useBackgroundImage } from "../hooks/ui/useBackgroundImage";
+import { useCenterCanvas } from "../hooks/ui/useCenterCanvas";
+import { useCanvasResizer } from "../hooks/ui/useCanvasResizer";
+import { useCameraControls } from "../hooks/ui/useCameraControls";
+import { MAP_PRESETS } from "../constants/layerConfigs";
+const DEFAULT_LAYER = "ink-on-paper";
 
 export default function App() {
     // -- UI State --
     const [inputValue, setInputValue] = useState("");
-    const [inputQuery, setInputQuery] = useState("");
+    const [inputQuery, setInputQuery] = useState({
+        cityHit: "",
+        countryHit: ""});
     const [queryCity, setQueryCity] = useState(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [bgImageLoaded, setBgImageLoaded] = useState(false);
     const [bgImageError, setBgImageError] = useState(false);
     const [showFrame, setShowFrame] = useState(true);
     const [frameOrientation, setFrameOrientation] = useState("portrait");
+    const [layerScheme, setLayerScheme] = useState(MAP_PRESETS[DEFAULT_LAYER]);
     // -- Data State --
     const [pathObjects, setPathObjects] = useState(null); // The cached Path2D objects
     const [visibleLayers, setVisibleLayers] = useState({
@@ -49,19 +53,19 @@ export default function App() {
     const [renderDuration, setRenderDuration] = useState(null);
     const [currentMirrorIndex, setCurrentMirrorIndex] = useState(0);
     // -- Camera & Interaction --
-    const [transform, setTransform] = useState({ scale: 0, x: 0, y: 0 });
-    const isDragging = useRef(false);
-    const lastMousePos = useRef({ x: 0, y: 0 });
+    const drawSceneRef = useRef(null);
+    const transformRef = useRef({ x: 0, y: 0, scale: 1 });
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const mapViewportRef = useRef(null);
     const bgImageRef = useRef(null);
-    const rafId = useRef(null);
     const queryClient = useQueryClient();
+    //debug
+    window.__qc = queryClient;
     const lastSizeRef = useRef({ w: 0, h: 0 });
     const [layerColors, setLayerColors] = useState(
         Object.fromEntries(
-            Object.entries(LAYER_CONFIG).map(([key, cfg]) => [key, cfg.color])
+            Object.entries(MAP_PRESETS[DEFAULT_LAYER].config).map(([key, cfg]) => [key, cfg.color])
         )
     );
 
@@ -84,34 +88,41 @@ export default function App() {
         isError: isRoadError,
         isFetching: isRoadFetching,
         isSuccess: isRoadsSuccess,
+        isPending: isRoadsPending,
         error: isRoadErrorInfo
     } = useRoadsData(
         queryCity,
+        responseRoads,
         {
-            select: responseRoads,
             enabled: !!queryCity,
-            staleTime: 1000 * 60 * 5,
+            staleTime: 1000 * 60 * 3,
+            gcTime: 1000 * 60  * 3,
         },
         setCurrentMirrorIndex,
         setFetchDuration,
         queryClient
     );
 
-    //MARK: precalculated paths
-    usePrecalculatePaths(processedData, containerRef, setPathObjects, setTransform, setRenderDuration);
+    // MARK: Draw/Render Logic
+    const drawScene = useDrawLogic(
+        canvasRef,
+        pathObjects,
+        transformRef,
+        visibleLayers,
+        layerColors
+    );
 
     //MARK: keep map center
-    useCenterCanvas(canvasRef, lastSizeRef, setTransform, showFrame, frameOrientation);
-    
+    useCenterCanvas(canvasRef, lastSizeRef, transformRef, drawScene, showFrame, frameOrientation);
 
-    // MARK: Draw/Render Logic
-    useDrawLogic(canvasRef, pathObjects, transform, visibleLayers, layerColors);
+    //MARK: precalculated paths
+    usePrecalculatePaths(processedData, containerRef, setPathObjects, transformRef, drawScene, setRenderDuration);
 
     // MARK: Camera Control
-    useCameraControls(canvasRef, lastMousePos, isDragging, rafId, setTransform);
+    useCameraControls(canvasRef, transformRef, drawScene);
 
     // MARK: responsive canvas resizer
-    useCanvasResizer(canvasRef, containerRef, setTransform);
+    useCanvasResizer(canvasRef, drawScene);
 
     const handleCitySelect = (city) => {
         setPathObjects(null);
@@ -158,7 +169,7 @@ export default function App() {
                     fetchDuration={fetchDuration}
                     canvasRef={canvasRef}
                     showFrame={showFrame}
-                    transform={transform}
+                    transformRef={transformRef}
                     visibleLayers={visibleLayers}
                     queryCity={queryCity}
                     handleCitySelect={handleCitySelect}
@@ -189,6 +200,7 @@ export default function App() {
                 isRoadError={isRoadError}
                 currentMirrorIndex={currentMirrorIndex}
                 apiLength={api.length}
+                cityData={cityData}
                 onCancelFetch={() => {
                     queryClient.cancelQueries({ queryKey: ["roads"] });
                     setQueryCity(null);

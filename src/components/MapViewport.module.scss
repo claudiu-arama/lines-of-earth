@@ -101,6 +101,12 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
     max-height: 90vh;
     aspect-ratio: 70 / 50;
 }
+.frameOuterSquare {
+    height: 100%;
+    width: auto;
+    max-height: 90vh;
+    aspect-ratio: 70 / 70;
+}
 
 .mat {
     display: flex;

@@ -1,13 +1,13 @@
 import {
     LAYER_KEYS,
-    LAYER_CONFIG,
+    MAP_PRESETS,
     LAYER_MAPPING_SETS,
     FRAME_CONFIG
 } from "../constants/layerConfigs.js";
 import { projectCoordinateToMeters } from "../helpers/locationHelpers.js";
 import { simplifyPath } from "../helpers/mathHelpers.js";
 
-export const exportToSVG = (processedData, canvasRef, showFrame, transform, visibleLayers, queryCity, frameOrientation, layerColors) => {
+export const exportToSVG = (processedData, canvasRef, showFrame, transformRef, visibleLayers, queryCity, frameOrientation, layerColors) => {
         if (!processedData || !processedData.roads.length) return;
 
         const { roads, bounds } = processedData;
@@ -15,7 +15,7 @@ export const exportToSVG = (processedData, canvasRef, showFrame, transform, visi
         const centerLon = (bounds.minLon + bounds.maxLon) / 2;
 
         const PRINT_SCALE = 4;
-        const SVG_SIZE    = 2000;
+        const SVG_SIZE = 2000;
 
         const MAT = FRAME_CONFIG.mat;
         const INNER_B1 = FRAME_CONFIG.innerBorder1;
@@ -43,7 +43,7 @@ export const exportToSVG = (processedData, canvasRef, showFrame, transform, visi
         let projectPoint;
 
         if (showFrame) {
-            const { scale, x, y } = transform;
+            const { scale, x, y } = transformRef.current;
             projectPoint = (lon, lat) => {
                 const [mx, my] = projectCoordinateToMeters(lon, lat, centerLat, centerLon, 5);
                 return {
@@ -170,7 +170,7 @@ export const exportToSVG = (processedData, canvasRef, showFrame, transform, visi
         }
 
         if (waterFillPaths && visibleLayers.water) {
-            const waterColor = layerColors['water'] || LAYER_CONFIG.water.color;
+            const waterColor = layerColors['water'] || MAP_PRESETS.water.color;
             svgString += `<g
                 id="layer-water-fill"
                 clip-path="url(#canvasClip)"
@@ -184,8 +184,8 @@ export const exportToSVG = (processedData, canvasRef, showFrame, transform, visi
 
         LAYER_KEYS.forEach((key) => {
             if (!layerBuckets[key]) return;
-            const color = layerColors[key] || LAYER_CONFIG[key]?.color || "#3d3d3d";
-            const strokeWidth = (LAYER_CONFIG[key]?.weight || 0.5) * PRINT_SCALE;
+            const color = layerColors[key] || MAP_PRESETS[key]?.color || "#3d3d3d";
+            const strokeWidth = (MAP_PRESETS[key]?.weight || 0.5) * PRINT_SCALE;
 
             svgString += `<g
                 id="layer-${key}"

@@ -1,11 +1,8 @@
-import {
-    LAYER_CONFIG,
-} from "../constants/layerConfigs.js";
-import {CityHits} from "../components/CityHits.jsx";
-import { exportToSVG } from "../helpers/exportToSVG.js";
+import {CityHits} from "../components/CityHits";
+import { exportToSVG } from "../helpers/exportToSVG";
 import style from "./MapControls.module.scss";
-import { debounce } from "../helpers/utilities.js";
-import { ColorPicker } from "../components/ColorPicker.jsx";
+import { debounce } from "../helpers/utilities";
+import { ColorPicker } from "../components/ColorPicker";
 
 const ScaleBarTop = () => (
     <svg
@@ -72,7 +69,7 @@ export function MapControls({
     setPathObjects,
     setInputValue,
     canvasRef,
-    transform,
+    transformRef,
     queryCity,
     setLayerColors,
     layerColors
@@ -170,7 +167,7 @@ export function MapControls({
                                     processedData,
                                     canvasRef,
                                     showFrame,
-                                    transform,
+                                    transformRef,
                                     visibleLayers,
                                     queryCity,
                                     frameOrientation,
@@ -213,6 +210,7 @@ export function MapControls({
                                     >
                                         <option value="portrait">Portrait (50×70)</option>
                                         <option value="landscape">Landscape (70×50)</option>
+                                        <option value="square">Square (70×70)</option>
                                     </select>
                                 </label>
                             )}

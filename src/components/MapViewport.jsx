@@ -1,5 +1,5 @@
 import styles from "./MapViewport.module.scss";
-import { FRAME_CONFIG, LAYER_CONFIG } from "../constants/layerConfigs";
+import { FRAME_CONFIG, MAP_PRESETS } from "../constants/layerConfigs";
 import { CityLabel } from "./CityLabel";
 
 export function MapViewport({
@@ -18,7 +18,8 @@ export function MapViewport({
     apiLength,
     isRoadsSuccess,
     isRoadError,
-    layerColors
+    layerColors,
+    cityData
 }) {
     const hasMap = !!pathObjects;
 
@@ -48,7 +49,7 @@ export function MapViewport({
                 <div className={`
                     ${styles.frameOuter}
                     ${showFrame && hasMap ? styles.frameOuterVisible : styles.frameOuterHidden}
-                    ${showFrame && hasMap && frameOrientation === "landscape" ? styles.frameOuterLandscape : ""}
+                    ${showFrame && hasMap && frameOrientation === "landscape" ? styles.frameOuterLandscape : frameOrientation === "square" ? styles.frameOuterSquare : ""}
                   `}
                   style={showFrame && hasMap ? frameCSSVars : undefined}>
                     <div className={`${styles.mat} ${showFrame && hasMap ? styles.matVisible : styles.matHidden}`}>
@@ -60,11 +61,11 @@ export function MapViewport({
                                 />
                                 {showFrame && hasMap && (
                                     <CityLabel
-                                    cityName="Lisbon"
-                                    country="Portugal"
+                                    cityName={cityData?.display_name?.split(",")[0]}
+                                    country={cityData?.display_name?.split(",")[1]}
                                     message="A city of seven hills"
                                     variant="fade"
-                                    bgColor={layerColors['canvas'] || LAYER_CONFIG.canvas.color}
+                                    bgColor={layerColors['canvas'] || MAP_PRESETS.canvas.color}
                                     accentColor="#1a1a1a"
                                     fontColor="#1a1a1a"
                                     />

@@ -1,16 +1,20 @@
 import { useEffect } from "react";
-import { projectCoordinateToMeters } from "../../helpers/locationHelpers.js";
-import { simplifyPath } from "../../helpers/mathHelpers.js";
-import { LAYER_CONFIG, LAYER_MAPPING, LAYER_MAPPING_SETS } from "../../constants/layerConfigs.js";
+import { projectCoordinateToMeters } from "../../helpers/locationHelpers";
+import { simplifyPath } from "../../helpers/mathHelpers";
+import { LAYER_MAPPING, LAYER_MAPPING_SETS } from "../../constants/layerConfigs";
 
-export function usePrecalculatePaths(processedData, containerRef, setPathObjects, setTransform, setRenderDuration) {
+//debug
+const pathLayerRegistry = new FinalizationRegistry((label) => {
+    console.log(`%c[GC] pathLayers for "${label}" was collected`, 'color: green; font-weight: bold');
+});
+
+export function usePrecalculatePaths(processedData, containerRef, setPathObjects, transformRef, drawScene, setRenderDuration) {
     useEffect(() => {
         if (!processedData) {
             setPathObjects(null);
             return;
         }
         let cancelled = false;
-
         const startTime = performance.now();
         const { roads, bounds } = processedData;
         const { clientWidth: width } = containerRef.current;
@@ -87,11 +91,16 @@ export function usePrecalculatePaths(processedData, containerRef, setPathObjects
         if (!cancelled) {
             setPathObjects(pathLayers);
             setRenderDuration((performance.now() - startTime).toFixed(2));
-
+            //debug
+            const label = `city-${Date.now()}`;
+            window.__cityRefs = window.__cityRefs || {};
+            window.__cityRefs[label] = new WeakRef(pathLayers);
+            console.log(`Registered pathLayers as "${label}"`);
             if (containerRef.current) {
                 const cx = containerRef.current.clientWidth / 2;
                 const cy = containerRef.current.clientHeight / 2;
-                setTransform({ scale: calculatedScale, x: cx, y: cy });
+                transformRef.current = { scale: calculatedScale, x: cx, y: cy };
+                drawScene.drawScene();
             }
         }
 

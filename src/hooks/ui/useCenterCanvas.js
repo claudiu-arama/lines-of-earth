@@ -1,47 +1,43 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
-export const useCenterCanvas = (canvasRef, lastSizeRef, setTransform, showFrame, frameOrientation) => {
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+export const useCenterCanvas = (canvasRef, lastSizeRef, transformRef, drawScene, showFrame, frameOrientation) => {
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-        const frame = requestAnimationFrame(() => {
-            const newW = canvas.clientWidth;
-            const newH = canvas.clientHeight;
+    const frame = requestAnimationFrame(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const newW = canvas.clientWidth;
+      const newH = canvas.clientHeight;
+      const { w: oldW, h: oldH } = lastSizeRef.current;
 
-            // Get prev
-            const { w: oldW, h: oldH } = lastSizeRef.current;
+      if (newW === 0 || newH === 0) {
+        lastSizeRef.current = { w: newW, h: newH };
+        return;
+      }
 
-            if (newW === 0 || newH === 0 || oldW === 0) {
-                // save on initial load
-                lastSizeRef.current = { w: newW, h: newH };
-                return;
-            }
+      canvas.width = newW * dpr;
+      canvas.height = newH * dpr;
 
-            // update with new values
-            canvas.width = newW;
-            canvas.height = newH;
+      if (oldW !== 0) {
+        const { x, y, scale } = transformRef.current;
+        if (scale !== 0) {
+          const worldCX = (oldW / 2 - x) / scale;
+          const worldCY = (oldH / 2 - y) / scale;
+          
+          transformRef.current = {
+            scale,
+            x: newW / 2 - worldCX * scale,
+            y: newH / 2 - worldCY * scale,
+          };
+        }
+      }
 
-            // update ref
-            lastSizeRef.current = { w: newW, h: newH };
+      lastSizeRef.current = { w: newW, h: newH };
 
-            setTransform((prev) => {
-                if (prev.scale === 0) return prev;
+      drawScene.drawSceneFull();
+    });
 
-                //get old center
-                const worldCX = (oldW / 2 - prev.x) / prev.scale;
-                const worldCY = (oldH / 2 - prev.y) / prev.scale;
-
-                // keep center
-                return {
-                    ...prev,
-                    x: newW / 2 - worldCX * prev.scale,
-                    y: newH / 2 - worldCY * prev.scale,
-                };
-            });
-
-        });
-
-        return () => cancelAnimationFrame(frame);
-    }, [showFrame, frameOrientation]);
+    return () => cancelAnimationFrame(frame);
+  }, [showFrame, frameOrientation]);
 };

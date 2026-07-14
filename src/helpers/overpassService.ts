@@ -28,7 +28,7 @@ export const recursiveFetch = async(urlArray, query, index = 0, lastError = null
         if (error.name === "AbortError" && signal.aborted) throw error;
         if (index + 1 >= urlArray.length) {
             queryClient.removeQueries({ queryKey: ["roads", queryCity.areaId] });
-            throw lastError || new Error("All servers failed");
+            throw new Error("All servers failed");
         }
         return recursiveFetch(urlArray, query, index + 1, error, setCurrentMirrorIndex, signal, start, setFetchDuration, queryClient, queryCity);
     }
