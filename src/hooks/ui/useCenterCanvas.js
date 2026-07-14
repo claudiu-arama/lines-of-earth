@@ -1,6 +1,13 @@
 import { useLayoutEffect } from "react";
 
-export const useCenterCanvas = (canvasRef, lastSizeRef, transformRef, drawScene, showFrame, frameOrientation) => {
+export const useCenterCanvas = (
+  canvasRef,
+  lastSizeRef,
+  transformRef,
+  drawScene,
+  showFrame,
+  frameOrientation
+) => {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -24,11 +31,11 @@ export const useCenterCanvas = (canvasRef, lastSizeRef, transformRef, drawScene,
         if (scale !== 0) {
           const worldCX = (oldW / 2 - x) / scale;
           const worldCY = (oldH / 2 - y) / scale;
-          
+
           transformRef.current = {
             scale,
             x: newW / 2 - worldCX * scale,
-            y: newH / 2 - worldCY * scale,
+            y: newH / 2 - worldCY * scale
           };
         }
       }

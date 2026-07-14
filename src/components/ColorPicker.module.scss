@@ -1,53 +1,53 @@
 $ink: #1a1a1e;
 
 .wrapper {
-    position: relative;
-    margin-left: auto;
-    flex-shrink: 0;
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .trigger {
-    width: 18px;
-    height: 18px;
-    border: 1px solid $ink;
-    border-radius: 0;
-    cursor: pointer;
-    padding: 0;
-    display: block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid $ink;
+  border-radius: 0;
+  cursor: pointer;
+  padding: 0;
+  display: block;
 }
 
 .popover {
-    position: absolute;
-    right: 0;
-    top: 20px;
-    z-index: 100;
-    background: #faf9f5;
-    border: 1px solid $ink;
-    padding: 6px;
-    display: grid;
-    grid-template-columns: repeat(9, 18px);
-    gap: 3px;
-    width: max-content;
+  position: absolute;
+  right: 0;
+  top: 20px;
+  z-index: 100;
+  background: #faf9f5;
+  border: 1px solid $ink;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(9, 18px);
+  gap: 3px;
+  width: max-content;
 }
 
 .swatch {
-    width: 16px;
-    height: 16px;
-    border: 1px solid transparent;
-    border-radius: 2px;
-    cursor: pointer;
-    padding: 0;
-    display: block;
-    transition: transform 0.1s;
+  width: 16px;
+  height: 16px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 0;
+  display: block;
+  transition: transform 0.1s;
 
-    &:hover {
-        transform: scale(1.2);
-        border-color: $ink;
-    }
+  &:hover {
+    transform: scale(1.2);
+    border-color: $ink;
+  }
 }
 
 .active {
-    border-color: $ink;
-    outline: 1px solid $ink;
-    outline-offset: 1px;
+  border-color: $ink;
+  outline: 1px solid $ink;
+  outline-offset: 1px;
 }

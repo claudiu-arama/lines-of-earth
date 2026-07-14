@@ -9,10 +9,10 @@ export const useCanvasResizer = (canvasRef, drawScene) => {
       const dpr = window.devicePixelRatio || 1;
       const currentLayoutW = canvas.clientWidth;
       const currentLayoutH = canvas.clientHeight;
-      
+
       if (currentLayoutW === 0 || currentLayoutH === 0) return;
       if (
-        canvas.width === currentLayoutW * dpr && 
+        canvas.width === currentLayoutW * dpr &&
         canvas.height === currentLayoutH * dpr
       ) {
         return;
@@ -25,7 +25,7 @@ export const useCanvasResizer = (canvasRef, drawScene) => {
 
     const observer = new ResizeObserver(update);
     observer.observe(canvas);
-    
+
     update();
 
     return () => observer.disconnect();

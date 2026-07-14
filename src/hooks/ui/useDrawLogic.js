@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { LAYER_KEYS, MAP_PRESETS } from "../../constants/layerConfigs";
-import { SCALE_BASE } from "../../constants/staticConstants";
+
+import { LAYER_KEYS, MAP_PRESETS } from "constants/layerConfigs";
+import { SCALE_BASE } from "constants/staticConstants";
 
 export const useDrawLogic = (
   canvasRef,
@@ -19,17 +20,20 @@ export const useDrawLogic = (
   //expensive draw
   const drawFull = () => {
     const canvas = canvasRef.current;
-    
-    const { 
-      pathObjects: currentPaths, 
-      visibleLayers: currentVisible, 
-      layerColors: currentColors 
+
+    const {
+      pathObjects: currentPaths,
+      visibleLayers: currentVisible,
+      layerColors: currentColors
     } = latestPropsRef.current;
-    
+
     if (!canvas || !currentPaths) return;
 
     if (!ctxRef.current) {
-      ctxRef.current = canvas.getContext("2d", { alpha: 1, desynchronized: true });
+      ctxRef.current = canvas.getContext("2d", {
+        alpha: 1,
+        desynchronized: true
+      });
     }
     const ctx = ctxRef.current;
     const dpr = window.devicePixelRatio || 1;
@@ -76,7 +80,8 @@ export const useDrawLogic = (
     if (currentVisible.water && currentPaths.waterFill) {
       offCtx.save();
       offCtx.fillStyle =
-        currentColors["water"] || MAP_PRESETS["ink-on-paper"].config.water.color;
+        currentColors["water"] ||
+        MAP_PRESETS["ink-on-paper"].config.water.color;
       offCtx.globalAlpha = 1;
       offCtx.fill(currentPaths.waterFill, "nonzero");
       offCtx.restore();
@@ -130,7 +135,10 @@ export const useDrawLogic = (
     }
 
     if (!ctxRef.current) {
-      ctxRef.current = canvas.getContext("2d", { alpha: 1, desynchronized: true });
+      ctxRef.current = canvas.getContext("2d", {
+        alpha: 1,
+        desynchronized: true
+      });
     }
     const ctx = ctxRef.current;
     const dpr = window.devicePixelRatio || 1;

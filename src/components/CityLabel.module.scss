@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@200;300;400&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@200;300;400&display=swap");
 
 .cityLabel {
   position: absolute;
@@ -21,7 +21,7 @@
 }
 
 .city {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: "Cormorant Garamond", serif;
   font-weight: 300;
   font-size: clamp(1.8rem, 5vw, 3.2rem);
   letter-spacing: 0.18em;
@@ -31,7 +31,7 @@
 }
 
 .country {
-  font-family: 'Jost', sans-serif;
+  font-family: "Jost", sans-serif;
   font-weight: 200;
   font-size: clamp(0.6rem, 1.5vw, 0.75rem);
   letter-spacing: 0.35em;
@@ -41,7 +41,7 @@
 }
 
 .message {
-  font-family: 'Jost', sans-serif;
+  font-family: "Jost", sans-serif;
   font-weight: 300;
   font-size: clamp(0.55rem, 1.2vw, 0.7rem);
   letter-spacing: 0.2em;

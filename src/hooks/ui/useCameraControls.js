@@ -1,10 +1,15 @@
 import { useEffect, useRef } from "react";
+
 import { debounce } from "./../../helpers/utilities";
 
-export const useCameraControls = (canvasRef, transformRef, { drawScene, drawSceneFull }) => {
+export const useCameraControls = (
+  canvasRef,
+  transformRef,
+  { drawScene, drawSceneFull }
+) => {
   const drawSceneRef = useRef(drawScene);
   const drawSceneFullRef = useRef(drawSceneFull);
-  
+
   useEffect(() => {
     drawSceneRef.current = drawScene;
     drawSceneFullRef.current = drawSceneFull;
@@ -44,11 +49,11 @@ export const useCameraControls = (canvasRef, transformRef, { drawScene, drawScen
 
       if (state.pendingZoom) {
         const { factor, x, y, panX, panY } = state.pendingZoom;
-        
+
         transf.x = x - (x - transf.x) * factor;
         transf.y = y - (y - transf.y) * factor;
         transf.scale *= factor;
-        
+
         transf.x += panX;
         transf.y += panY;
 
@@ -133,8 +138,14 @@ export const useCameraControls = (canvasRef, transformRef, { drawScene, drawScen
         state.isPinchZooming = true;
 
         const pts = Array.from(state.pointers.values());
-        state.lastPinchDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
-        state.lastPinchMid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+        state.lastPinchDist = Math.hypot(
+          pts[1].x - pts[0].x,
+          pts[1].y - pts[0].y
+        );
+        state.lastPinchMid = {
+          x: (pts[0].x + pts[1].x) / 2,
+          y: (pts[0].y + pts[1].y) / 2
+        };
       }
     };
 
@@ -174,7 +185,7 @@ export const useCameraControls = (canvasRef, transformRef, { drawScene, drawScen
         state.isPinchZooming = false;
         state.canvasRect = null;
         canvas.style.cursor = "grab";
-        
+
         debouncedFullDraw.cancel();
         if (state.rafId) {
           cancelAnimationFrame(state.rafId);
@@ -183,11 +194,10 @@ export const useCameraControls = (canvasRef, transformRef, { drawScene, drawScen
 
         state.needsFullDraw = true;
         applyPendingTransforms();
-
       } else if (state.pointers.size === 1) {
         state.isPinchZooming = false;
         state.isDragging = true;
-        
+
         const [remainingPointer] = state.pointers.values();
         state.lastX = remainingPointer.x;
         state.lastY = remainingPointer.y;
@@ -196,7 +206,7 @@ export const useCameraControls = (canvasRef, transformRef, { drawScene, drawScen
 
     const handleWheel = (e) => {
       e.preventDefault();
-      
+
       const rect = state.canvasRect || canvas.getBoundingClientRect();
       const factor = Math.pow(1.1, -e.deltaY / 50);
       const centerX = e.clientX - rect.left;
@@ -205,7 +215,9 @@ export const useCameraControls = (canvasRef, transformRef, { drawScene, drawScen
       queueZoom({ factor, centerX, centerY, panX: 0, panY: 0 });
     };
 
-    canvas.addEventListener("pointerdown", handlePointerDown, { passive: false });
+    canvas.addEventListener("pointerdown", handlePointerDown, {
+      passive: false
+    });
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("pointercancel", handlePointerUp);
@@ -217,7 +229,7 @@ export const useCameraControls = (canvasRef, transformRef, { drawScene, drawScen
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerUp);
       canvas.removeEventListener("wheel", handleWheel);
-      
+
       if (state.rafId) cancelAnimationFrame(state.rafId);
       debouncedFullDraw.cancel();
     };
