@@ -1,9 +1,16 @@
 import style from "./CityHits.module.scss";
 
-export const CityHits = ({ cityData, handleCitySelect }) => {
+// TODO: replace `any` with proper types
+export const CityHits = ({
+  cityData,
+  handleCitySelect
+}: {
+  cityData: any;
+  handleCitySelect: any;
+}) => {
   return (
     <>
-      {cityData?.map((city, i) => (
+      {cityData?.map((city: any, i: any) => (
         <div
           key={i}
           className={style.suggestionItem}

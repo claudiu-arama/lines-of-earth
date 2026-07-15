@@ -1,8 +1,11 @@
 export type Point = [number, number];
 
-export const debounce = (func: Function, wait: number) => {
-  let timeout: any;
-  const debounced = (...args: any[]) => {
+export const debounce = <T extends (...args: never[]) => void>(
+  func: T,
+  wait: number
+) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  const debounced = (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };

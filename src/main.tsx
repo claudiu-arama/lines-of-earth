@@ -1,9 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import App from "./App.jsx";
+import App from "./App";
 
-createRoot(document.getElementById("root")).render(
+// TODO: replace `any` with proper types
+createRoot(document.getElementById("root") as any).render(
   <StrictMode>
     <App />
   </StrictMode>

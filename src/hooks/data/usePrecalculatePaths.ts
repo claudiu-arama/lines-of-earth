@@ -12,13 +12,14 @@ const pathLayerRegistry = new FinalizationRegistry((label) => {
   );
 });
 
+// TODO: replace `any` with proper types
 export function usePrecalculatePaths(
-  processedData,
-  containerRef,
-  setPathObjects,
-  transformRef,
-  drawScene,
-  setRenderDuration
+  processedData: any,
+  containerRef: any,
+  setPathObjects: any,
+  transformRef: any,
+  drawScene: any,
+  setRenderDuration: any
 ) {
   useEffect(() => {
     if (!processedData) {
@@ -52,9 +53,10 @@ export function usePrecalculatePaths(
       miscellaneous: new Path2D()
     };
 
-    roads.forEach((road) => {
+    // TODO: replace `any` with proper types
+    roads.forEach((road: any) => {
       if (cancelled) return;
-      const projectedPoints = road.coordinates.map((p) =>
+      const projectedPoints = road.coordinates.map((p: any) =>
         projectCoordinateToMeters(p[0], p[1], centerLat, centerLon, 5)
       );
       const simplified = simplifyPath(projectedPoints, 2.0);
@@ -104,8 +106,9 @@ export function usePrecalculatePaths(
       setRenderDuration((performance.now() - startTime).toFixed(2));
       //debug
       const label = `city-${Date.now()}`;
-      window.__cityRefs = window.__cityRefs || {};
-      window.__cityRefs[label] = new WeakRef(pathLayers);
+      // TODO: replace `any` with proper types
+      (window as any).__cityRefs = (window as any).__cityRefs || {};
+      (window as any).__cityRefs[label] = new WeakRef(pathLayers);
       console.log(`Registered pathLayers as "${label}"`);
       if (containerRef.current) {
         const cx = containerRef.current.clientWidth / 2;

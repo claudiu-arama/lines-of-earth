@@ -1,4 +1,4 @@
-@import "./_variables";
+@use "./_variables" as *;
 
 $outer-border: 20px;
 $mat-padding: 40px;

@@ -1,12 +1,13 @@
 import { useLayoutEffect } from "react";
 
+// TODO: replace `any` with proper types
 export const useCenterCanvas = (
-  canvasRef,
-  lastSizeRef,
-  transformRef,
-  drawScene,
-  showFrame,
-  frameOrientation
+  canvasRef: any,
+  lastSizeRef: any,
+  transformRef: any,
+  drawScene: any,
+  showFrame: any,
+  frameOrientation: any
 ) => {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;

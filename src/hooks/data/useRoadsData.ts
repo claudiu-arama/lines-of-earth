@@ -4,13 +4,14 @@ import { arrayofAPIs as api } from "constants/apis";
 import { recursiveFetch } from "helpers/overpassService";
 import { getRoadsQuery } from "helpers/queryHelpers";
 
+// TODO: replace `any` with proper types
 export const useRoadsData = (
-  queryCity,
-  responseRoads,
-  options,
-  setCurrentMirrorIndex,
-  setFetchDuration,
-  queryClient
+  queryCity: any,
+  responseRoads: any,
+  options: any,
+  setCurrentMirrorIndex: any,
+  setFetchDuration: any,
+  queryClient: any
 ) => {
   return useQuery({
     queryKey: ["roads", queryCity?.areaId ?? null],

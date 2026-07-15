@@ -1,17 +1,18 @@
 import { FETCH_TIMEOUT_MS } from "constants/staticConstants";
 
+// TODO: replace `any` with proper types
 export const recursiveFetch = async (
-  urlArray,
-  query,
+  urlArray: any,
+  query: any,
   index = 0,
-  lastError = null,
-  setCurrentMirrorIndex,
-  signal,
-  start,
-  setFetchDuration,
-  queryClient,
-  queryCity
-) => {
+  lastError: any = null,
+  setCurrentMirrorIndex: any,
+  signal: any,
+  start: any,
+  setFetchDuration: any,
+  queryClient: any,
+  queryCity: any
+): Promise<any> => {
   if (index >= urlArray.length) {
     throw lastError || new Error("All servers failed");
   }
@@ -38,7 +39,8 @@ export const recursiveFetch = async (
     setFetchDuration(end);
     return data;
   } catch (error) {
-    if (error.name === "AbortError" && signal.aborted) throw error;
+    // TODO: replace `any` with proper types
+    if ((error as any).name === "AbortError" && signal.aborted) throw error;
     if (index + 1 >= urlArray.length) {
       queryClient.removeQueries({ queryKey: ["roads", queryCity.areaId] });
       throw new Error("All servers failed");

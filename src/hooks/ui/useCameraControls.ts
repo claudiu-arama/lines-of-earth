@@ -2,10 +2,17 @@ import { useEffect, useRef } from "react";
 
 import { debounce } from "./../../helpers/utilities";
 
+// TODO: replace `any` with proper types
 export const useCameraControls = (
-  canvasRef,
-  transformRef,
-  { drawScene, drawSceneFull }
+  canvasRef: any,
+  transformRef: any,
+  {
+    drawScene,
+    drawSceneFull
+  }: {
+    drawScene: any;
+    drawSceneFull: any;
+  }
 ) => {
   const drawSceneRef = useRef(drawScene);
   const drawSceneFullRef = useRef(drawSceneFull);
@@ -19,7 +26,8 @@ export const useCameraControls = (
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const state = {
+    // TODO: replace `any` with proper types
+    const state: any = {
       isDragging: false,
       isPinchZooming: false,
       rafId: null,
@@ -90,7 +98,8 @@ export const useCameraControls = (
       });
     };
 
-    const panTo = (clientX, clientY) => {
+    // TODO: replace `any` with proper types
+    const panTo = (clientX: any, clientY: any) => {
       state.pendingPanX += clientX - state.lastX;
       state.pendingPanY += clientY - state.lastY;
       state.lastX = clientX;
@@ -98,7 +107,8 @@ export const useCameraControls = (
       scheduleFrame(false);
     };
 
-    const queueZoom = (zoomConfig) => {
+    // TODO: replace `any` with proper types
+    const queueZoom = (zoomConfig: any) => {
       if (state.pendingZoom) {
         state.pendingZoom = {
           factor: state.pendingZoom.factor * zoomConfig.factor,
@@ -118,7 +128,8 @@ export const useCameraControls = (
       }
       scheduleFrame(true);
     };
-    const handlePointerDown = (e) => {
+    // TODO: replace `any` with proper types
+    const handlePointerDown = (e: any) => {
       if (e.cancelable) e.preventDefault();
 
       state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -137,7 +148,8 @@ export const useCameraControls = (
         state.isDragging = false;
         state.isPinchZooming = true;
 
-        const pts = Array.from(state.pointers.values());
+        // TODO: replace `any` with proper types
+        const pts: any = Array.from(state.pointers.values());
         state.lastPinchDist = Math.hypot(
           pts[1].x - pts[0].x,
           pts[1].y - pts[0].y
@@ -149,7 +161,8 @@ export const useCameraControls = (
       }
     };
 
-    const handlePointerMove = (e) => {
+    // TODO: replace `any` with proper types
+    const handlePointerMove = (e: any) => {
       if (!state.pointers.has(e.pointerId)) return;
       state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -157,7 +170,8 @@ export const useCameraControls = (
         panTo(e.clientX, e.clientY);
         debouncedFullDraw();
       } else if (state.pointers.size === 2 && state.isPinchZooming) {
-        const pts = Array.from(state.pointers.values());
+        // TODO: replace `any` with proper types
+        const pts: any = Array.from(state.pointers.values());
         const curDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
         const curMidX = (pts[0].x + pts[1].x) / 2;
         const curMidY = (pts[0].y + pts[1].y) / 2;
@@ -177,7 +191,8 @@ export const useCameraControls = (
       }
     };
 
-    const handlePointerUp = (e) => {
+    // TODO: replace `any` with proper types
+    const handlePointerUp = (e: any) => {
       state.pointers.delete(e.pointerId);
 
       if (state.pointers.size === 0) {
@@ -204,7 +219,8 @@ export const useCameraControls = (
       }
     };
 
-    const handleWheel = (e) => {
+    // TODO: replace `any` with proper types
+    const handleWheel = (e: any) => {
       e.preventDefault();
 
       const rect = state.canvasRect || canvas.getBoundingClientRect();

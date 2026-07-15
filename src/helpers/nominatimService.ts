@@ -10,7 +10,8 @@ export const fetchCitySuggestions = async (inputQuery: string) => {
   const data = await response.json();
   if (data.length === 0) throw new Error("No cities found.");
 
-  return data.map((item) => {
+  // TODO: replace `any` with proper types
+  return data.map((item: any) => {
     const id = parseInt(item.osm_id, 10);
     let areaId: number | null = null;
 

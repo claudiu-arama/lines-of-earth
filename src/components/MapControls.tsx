@@ -44,6 +44,7 @@ const ScaleBarBottom = () => (
   </svg>
 );
 
+// TODO: replace `any` with proper types
 export function MapControls({
   pathObjects,
   processedData,
@@ -73,6 +74,35 @@ export function MapControls({
   queryCity,
   setLayerColors,
   layerColors
+}: {
+  pathObjects: any;
+  processedData: any;
+  isCollapsed: any;
+  setIsCollapsed: any;
+  inputValue: any;
+  handleOnChange: any;
+  isCityFetching: any;
+  isRoadError: any;
+  isRoadErrorInfo: any;
+  isRoadFetching: any;
+  cityData: any;
+  handleCitySelect: any;
+  renderDuration: any;
+  fetchDuration: any;
+  visibleLayers: any;
+  setVisibleLayers: any;
+  showFrame: any;
+  setShowFrame: any;
+  frameOrientation: any;
+  setFrameOrientation: any;
+  setQueryCity: any;
+  setPathObjects: any;
+  setInputValue: any;
+  canvasRef: any;
+  transformRef: any;
+  queryCity: any;
+  setLayerColors: any;
+  layerColors: any;
 }) {
   return isCollapsed ? (
     <button
@@ -133,7 +163,8 @@ export function MapControls({
                       type="checkbox"
                       checked={visibleLayers[layer]}
                       onChange={() =>
-                        setVisibleLayers((prev) => ({
+                        // TODO: replace `any` with proper types
+                        setVisibleLayers((prev: any) => ({
                           ...prev,
                           [layer]: !prev[layer]
                         }))
@@ -147,8 +178,12 @@ export function MapControls({
                     <span>{layer}</span>
                     <ColorPicker
                       value={layerColors[layer]}
-                      onChange={(color) =>
-                        setLayerColors((prev) => ({ ...prev, [layer]: color }))
+                      // TODO: replace `any` with proper types
+                      onChange={(color: any) =>
+                        setLayerColors((prev: any) => ({
+                          ...prev,
+                          [layer]: color
+                        }))
                       }
                     />
                   </label>

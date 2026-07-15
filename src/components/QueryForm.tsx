@@ -66,7 +66,8 @@ export default function App() {
   const bgImageRef = useRef(null);
   const queryClient = useQueryClient();
   //debug
-  window.__qc = queryClient;
+  // TODO: replace `any` with proper types
+  (window as any).__qc = queryClient;
   const lastSizeRef = useRef({ w: 0, h: 0 });
   const [layerColors, setLayerColors] = useState(
     Object.fromEntries(
@@ -146,21 +147,24 @@ export default function App() {
   // MARK: responsive canvas resizer
   useCanvasResizer(canvasRef, drawScene);
 
-  const handleCitySelect = (city) => {
+  // TODO: replace `any` with proper types
+  const handleCitySelect = (city: any) => {
     setPathObjects(null);
     setRenderDuration(null);
     setFetchDuration(null);
     setQueryCity(city);
   };
 
-  const handleOnChange = (e) => {
+  // TODO: replace `any` with proper types
+  const handleOnChange = (e: any) => {
     setInputValue(e.target.value);
   };
 
   useEffect(() => {
-    let timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setPathObjects(null);
-      setInputQuery(inputValue);
+      // TODO: replace `any` with proper types
+      setInputQuery(inputValue as any);
     }, 500);
     return () => clearTimeout(timer);
   }, [inputValue]);
@@ -173,8 +177,9 @@ export default function App() {
     error
   } = useQuery({
     queryKey: ["cityQuery", inputQuery],
-    queryFn: () => fetchCitySuggestions(inputQuery),
-    enabled: inputQuery.length > 2,
+    // TODO: replace `any` with proper types
+    queryFn: () => fetchCitySuggestions(inputQuery as any),
+    enabled: (inputQuery as any).length > 2,
     retry: false,
     staleTime: 1000 * 60 * 5
   });

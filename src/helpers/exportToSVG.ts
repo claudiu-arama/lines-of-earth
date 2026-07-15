@@ -3,19 +3,20 @@ import {
   LAYER_KEYS,
   LAYER_MAPPING_SETS,
   MAP_PRESETS
-} from "constants/layerConfigs.js";
-import { projectCoordinateToMeters } from "helpers/locationHelpers.js";
-import { simplifyPath } from "helpers/mathHelpers.js";
+} from "constants/layerConfigs";
+import { projectCoordinateToMeters } from "helpers/locationHelpers";
+import { simplifyPath } from "helpers/mathHelpers";
 
+// TODO: replace `any` with proper types
 export const exportToSVG = (
-  processedData,
-  canvasRef,
-  showFrame,
-  transformRef,
-  visibleLayers,
-  queryCity,
-  frameOrientation,
-  layerColors
+  processedData: any,
+  canvasRef: any,
+  showFrame: any,
+  transformRef: any,
+  visibleLayers: any,
+  queryCity: any,
+  frameOrientation: any,
+  layerColors: any
 ) => {
   if (!processedData || !processedData.roads.length) return;
 
@@ -53,7 +54,8 @@ export const exportToSVG = (
 
   if (showFrame) {
     const { scale, x, y } = transformRef.current;
-    projectPoint = (lon, lat) => {
+    // TODO: replace `any` with proper types
+    projectPoint = (lon: any, lat: any) => {
       const [mx, my] = projectCoordinateToMeters(
         lon,
         lat,
@@ -73,7 +75,8 @@ export const exportToSVG = (
     const scaleConstant = 0.0000018;
     const scale = (SVG_SIZE / MaxSpan) * scaleConstant;
 
-    projectPoint = (lon, lat) => {
+    // TODO: replace `any` with proper types
+    projectPoint = (lon: any, lat: any) => {
       const simplified = simplifyPath(
         [projectCoordinateToMeters(lon, lat, centerLat, centerLon, 5)],
         2.0
@@ -87,7 +90,8 @@ export const exportToSVG = (
   const layerBuckets = Object.fromEntries(LAYER_KEYS.map((k) => [k, ""]));
   let waterFillPaths = "";
 
-  roads.forEach((road) => {
+  // TODO: replace `any` with proper types
+  roads.forEach((road: any) => {
     if (!road.coordinates || road.coordinates.length < 2) return;
 
     const type = road.type?.toLowerCase() || "";
@@ -106,8 +110,9 @@ export const exportToSVG = (
 
     if (!visibleLayers[targetKey]) return;
 
+    // TODO: replace `any` with proper types
     const pathData = road.coordinates
-      .map((p, i) => {
+      .map((p: any, i: any) => {
         const { x, y } = projectPoint(p[0], p[1]);
         return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
       })
@@ -186,7 +191,8 @@ export const exportToSVG = (
   }
 
   if (waterFillPaths && visibleLayers.water) {
-    const waterColor = layerColors["water"] || MAP_PRESETS.water.color;
+    // TODO: replace `any` with proper types
+    const waterColor = layerColors["water"] || (MAP_PRESETS as any).water.color;
     svgString += `<g
                 id="layer-water-fill"
                 clip-path="url(#canvasClip)"
@@ -200,8 +206,11 @@ export const exportToSVG = (
 
   LAYER_KEYS.forEach((key) => {
     if (!layerBuckets[key]) return;
-    const color = layerColors[key] || MAP_PRESETS[key]?.color || "#3d3d3d";
-    const strokeWidth = (MAP_PRESETS[key]?.weight || 0.5) * PRINT_SCALE;
+    // TODO: replace `any` with proper types
+    const color =
+      layerColors[key] || (MAP_PRESETS as any)[key]?.color || "#3d3d3d";
+    const strokeWidth =
+      ((MAP_PRESETS as any)[key]?.weight || 0.5) * PRINT_SCALE;
 
     svgString += `<g
                 id="layer-${key}"

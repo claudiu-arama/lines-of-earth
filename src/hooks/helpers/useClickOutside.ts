@@ -1,8 +1,9 @@
 import { useCallback, useEffect } from "react";
 
-export const useClickOutside = (ref, isOpen, callback) => {
+// TODO: replace `any` with proper types
+export const useClickOutside = (ref: any, isOpen: any, callback: any) => {
   const handleClickOutside = useCallback(
-    (event) => {
+    (event: any) => {
       if (ref.current && !ref.current.contains(event.target)) {
         callback();
       }

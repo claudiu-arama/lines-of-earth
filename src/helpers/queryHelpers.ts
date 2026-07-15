@@ -1,4 +1,5 @@
-export const getRoadsQuery = (city) => {
+// TODO: replace `any` with proper types
+export const getRoadsQuery = (city: any) => {
   if (!city) return "";
 
   const highways = `

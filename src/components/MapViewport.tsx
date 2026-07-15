@@ -4,6 +4,7 @@ import { CityLabel } from "./CityLabel";
 
 import styles from "./MapViewport.module.scss";
 
+// TODO: replace `any` with proper types
 export function MapViewport({
   canvasRef,
   mapViewportRef,
@@ -22,6 +23,24 @@ export function MapViewport({
   isRoadError,
   layerColors,
   cityData
+}: {
+  canvasRef: any;
+  mapViewportRef: any;
+  isRoadFetching: any;
+  currentMirrorIndex: any;
+  onCancelFetch: any;
+  pathObjects: any;
+  showFrame: any;
+  frameOrientation: any;
+  bgImageLoaded: any;
+  bgImageError: any;
+  bgImageSource: any;
+  blurredPlaceholder: any;
+  apiLength: any;
+  isRoadsSuccess: any;
+  isRoadError: any;
+  layerColors: any;
+  cityData: any;
 }) {
   const hasMap = !!pathObjects;
 
@@ -56,7 +75,8 @@ export function MapViewport({
                     ${showFrame && hasMap ? styles.frameOuterVisible : styles.frameOuterHidden}
                     ${showFrame && hasMap && frameOrientation === "landscape" ? styles.frameOuterLandscape : frameOrientation === "square" ? styles.frameOuterSquare : ""}
                   `}
-          style={showFrame && hasMap ? frameCSSVars : undefined}
+          // TODO: replace `any` with proper types
+          style={showFrame && hasMap ? (frameCSSVars as any) : undefined}
         >
           <div
             className={`${styles.mat} ${showFrame && hasMap ? styles.matVisible : styles.matHidden}`}
@@ -77,7 +97,11 @@ export function MapViewport({
                     country={cityData?.display_name?.split(",")[1]}
                     message="A city of seven hills"
                     variant="fade"
-                    bgColor={layerColors["canvas"] || MAP_PRESETS.canvas.color}
+                    bgColor={
+                      layerColors["canvas"] ||
+                      // TODO: replace `any` with proper types
+                      (MAP_PRESETS as any).canvas.color
+                    }
                     accentColor="#1a1a1a"
                     fontColor="#1a1a1a"
                   />

@@ -11,6 +11,7 @@ const STYLES = {
   }
 };
 
+// TODO: replace `any` with proper types
 export const CityLabel = ({
   cityName = "London",
   country = "United Kingdom",
@@ -19,8 +20,16 @@ export const CityLabel = ({
   bgColor = "#f5f0e8",
   accentColor = "#1a1a1a",
   fontColor = "#1a1a1a"
+}: {
+  cityName?: string;
+  country?: string;
+  message?: string;
+  variant?: string;
+  bgColor?: string;
+  accentColor?: string;
+  fontColor?: string;
 }) => {
-  const style = STYLES[variant] ?? STYLES.fade;
+  const style = (STYLES as any)[variant] ?? STYLES.fade;
 
   return (
     <div

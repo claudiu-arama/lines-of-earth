@@ -1,8 +1,9 @@
 import { ENCLOSED_WATER_TYPES, EXCLUDED_TYPES } from "constants/layerConfigs";
 
-export const responseRoads = (newData) =>
+// TODO: replace `any` with proper types
+export const responseRoads = (newData: any) =>
   newData?.elements.reduce(
-    (acc, el) => {
+    (acc: any, el: any) => {
       if (!["way", "relation", "node"].includes(el.type)) return acc;
 
       const tags = el.tags || {};
@@ -20,32 +21,37 @@ export const responseRoads = (newData) =>
         tags.waterway ||
         "unclassified";
 
-      const updateBounds = (p) => {
+      // TODO: replace `any` with proper types
+      const updateBounds = (p: any) => {
         if (p.lat < acc.bounds.minLat) acc.bounds.minLat = p.lat;
         if (p.lat > acc.bounds.maxLat) acc.bounds.maxLat = p.lat;
         if (p.lon < acc.bounds.minLon) acc.bounds.minLon = p.lon;
         if (p.lon > acc.bounds.maxLon) acc.bounds.maxLon = p.lon;
       };
 
-      const processGeometry = (geometry, type) => {
+      // TODO: replace `any` with proper types
+      const processGeometry = (geometry: any, type: any) => {
         if (!geometry || geometry.length < 2) return null;
         if (EXCLUDED_TYPES.has(type)) return null;
         geometry.forEach(updateBounds);
         const first = geometry[0];
         const last = geometry[geometry.length - 1];
+        // TODO: replace `any` with proper types
         const isActuallyClosed =
           (first.lat === last.lat && first.lon === last.lon) ||
-          ENCLOSED_WATER_TYPES.has(type);
+          (ENCLOSED_WATER_TYPES as any).has(type);
         return {
           type: category,
           isClosed: isActuallyClosed,
-          coordinates: geometry.map((p) => [p.lat, p.lon])
+          // TODO: replace `any` with proper types
+          coordinates: geometry.map((p: any) => [p.lat, p.lon])
         };
       };
 
-      const chainOuterWays = (members) => {
+      // TODO: replace `any` with proper types
+      const chainOuterWays = (members: any) => {
         const outerWays = members.filter(
-          (m) =>
+          (m: any) =>
             m.type === "way" && m.role === "outer" && m.geometry?.length >= 2
         );
 
@@ -57,7 +63,8 @@ export const responseRoads = (newData) =>
         while (remaining.length) {
           const lastPoint = chain[chain.length - 1];
 
-          const nextIdx = remaining.findIndex((w) => {
+          // TODO: replace `any` with proper types
+          const nextIdx = remaining.findIndex((w: any) => {
             const first = w.geometry[0];
             const last = w.geometry[w.geometry.length - 1];
             return (
@@ -97,7 +104,8 @@ export const responseRoads = (newData) =>
             if (road) acc.roads.push({ ...road, isClosed: true });
           }
         } else {
-          el.members.forEach((member) => {
+          // TODO: replace `any` with proper types
+          el.members.forEach((member: any) => {
             if (member.type === "way") {
               const road = processGeometry(member.geometry, category);
               if (road) acc.roads.push(road);

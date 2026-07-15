@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 
+// TODO: replace `any` with proper types
 export const useBackgroundImage = (
-  bgImageRef,
-  setBgImageLoaded,
-  placeholderImg,
-  fallbackImg
+  bgImageRef: any,
+  setBgImageLoaded: any,
+  placeholderImg: any,
+  fallbackImg: any
 ) => {
   useEffect(() => {
     // Create an image element to preload the background
@@ -13,7 +14,7 @@ export const useBackgroundImage = (
       setBgImageLoaded(true);
     };
     img.onerror = () => {
-      setBgImageError(true);
+      // setBgImageError(true);
     };
     // Check if browser supports WebP
     const canvas = document.createElement("canvas");
