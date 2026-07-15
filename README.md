@@ -32,7 +32,7 @@ src/
 **Data flow, roughly:**
 
 1. `QueryForm` takes a city search input → `nominatimService` geocodes it.
-2. Once a city is selected, `useRoadsData` queries the Overpass API (via `overpassService`, which fails over across multiple public mirrors) for the road network within that city's boundary.
+2. Once a city is selected, `useRoadsData` queries the Overpass API (via `overpassService`, which attempts to get the details from multiple public mirrors) for the road network within that city's boundary.
 3. `formatCityHelper`/`queryHelpers` reshape the raw Overpass response; `usePrecalculatePaths` converts geometry into drawable `Path2D` objects (via `locationHelpers`/`mathHelpers` for coordinate projection and path simplification).
 4. `useDrawLogic` renders those paths onto `<canvas>` inside `MapViewport`, styled per the active layer/color preset (`constants/layerConfigs`).
 5. `exportToSVG` can re-render the same processed data as a standalone SVG file for export/printing.
