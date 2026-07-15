@@ -1,35 +1,40 @@
 import { useEffect, useRef } from "react";
-import { LAYER_KEYS, MAP_PRESETS } from "../../constants/layerConfigs";
-import { SCALE_BASE } from "../../constants/staticConstants";
 
+import { LAYER_KEYS, MAP_PRESETS } from "constants/layerConfigs";
+import { SCALE_BASE } from "constants/staticConstants";
+
+// TODO: replace `any` with proper types
 export const useDrawLogic = (
-  canvasRef,
-  pathObjects,
-  transformRef,
-  visibleLayers,
-  layerColors
+  canvasRef: any,
+  pathObjects: any,
+  transformRef: any,
+  visibleLayers: any,
+  layerColors: any
 ) => {
-  const ctxRef = useRef(null);
-  const offscreenRef = useRef(null);
-  const baseTransformRef = useRef(null);
-  const timeoutRef = useRef(null);
+  const ctxRef = useRef<any>(null);
+  const offscreenRef = useRef<any>(null);
+  const baseTransformRef = useRef<any>(null);
+  const timeoutRef = useRef<any>(null);
 
-  const latestPropsRef = useRef({});
+  const latestPropsRef = useRef<any>({});
   latestPropsRef.current = { pathObjects, visibleLayers, layerColors };
   //expensive draw
   const drawFull = () => {
     const canvas = canvasRef.current;
-    
-    const { 
-      pathObjects: currentPaths, 
-      visibleLayers: currentVisible, 
-      layerColors: currentColors 
+
+    const {
+      pathObjects: currentPaths,
+      visibleLayers: currentVisible,
+      layerColors: currentColors
     } = latestPropsRef.current;
-    
+
     if (!canvas || !currentPaths) return;
 
     if (!ctxRef.current) {
-      ctxRef.current = canvas.getContext("2d", { alpha: 1, desynchronized: true });
+      ctxRef.current = canvas.getContext("2d", {
+        alpha: 1,
+        desynchronized: true
+      });
     }
     const ctx = ctxRef.current;
     const dpr = window.devicePixelRatio || 1;
@@ -76,7 +81,8 @@ export const useDrawLogic = (
     if (currentVisible.water && currentPaths.waterFill) {
       offCtx.save();
       offCtx.fillStyle =
-        currentColors["water"] || MAP_PRESETS["ink-on-paper"].config.water.color;
+        currentColors["water"] ||
+        MAP_PRESETS["ink-on-paper"].config.water.color;
       offCtx.globalAlpha = 1;
       offCtx.fill(currentPaths.waterFill, "nonzero");
       offCtx.restore();
@@ -86,7 +92,8 @@ export const useDrawLogic = (
 
     for (let i = 0; i < LAYER_KEYS.length; i++) {
       const key = LAYER_KEYS[i];
-      const config = MAP_PRESETS["ink-on-paper"].config[key];
+      // TODO: replace `any` with proper types
+      const config = (MAP_PRESETS["ink-on-paper"].config as any)[key];
       if (!currentVisible[key] || scale <= config.minScale) continue;
       const path = currentPaths[key];
       if (!path) continue;
@@ -99,7 +106,8 @@ export const useDrawLogic = (
       offCtx.font = `${12 / scale}px Arial`;
       offCtx.fillStyle = "#666666";
       offCtx.textAlign = "center";
-      currentPaths.labels.forEach((label) => {
+      // TODO: replace `any` with proper types
+      currentPaths.labels.forEach((label: any) => {
         offCtx.fillText(label.text, label.x, label.y);
       });
     }
@@ -130,7 +138,10 @@ export const useDrawLogic = (
     }
 
     if (!ctxRef.current) {
-      ctxRef.current = canvas.getContext("2d", { alpha: 1, desynchronized: true });
+      ctxRef.current = canvas.getContext("2d", {
+        alpha: 1,
+        desynchronized: true
+      });
     }
     const ctx = ctxRef.current;
     const dpr = window.devicePixelRatio || 1;

@@ -1,6 +1,7 @@
 import { useLayoutEffect } from "react";
 
-export const useCanvasResizer = (canvasRef, drawScene) => {
+// TODO: replace `any` with proper types
+export const useCanvasResizer = (canvasRef: any, drawScene: any) => {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -9,10 +10,10 @@ export const useCanvasResizer = (canvasRef, drawScene) => {
       const dpr = window.devicePixelRatio || 1;
       const currentLayoutW = canvas.clientWidth;
       const currentLayoutH = canvas.clientHeight;
-      
+
       if (currentLayoutW === 0 || currentLayoutH === 0) return;
       if (
-        canvas.width === currentLayoutW * dpr && 
+        canvas.width === currentLayoutW * dpr &&
         canvas.height === currentLayoutH * dpr
       ) {
         return;
@@ -25,7 +26,7 @@ export const useCanvasResizer = (canvasRef, drawScene) => {
 
     const observer = new ResizeObserver(update);
     observer.observe(canvas);
-    
+
     update();
 
     return () => observer.disconnect();
