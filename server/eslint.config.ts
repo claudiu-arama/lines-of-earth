@@ -57,6 +57,8 @@ export default defineConfig([
        */
       "no-unused-vars": "off",
       "no-console": ["warn", { allow: ["log"] }],
+      "no-debugger": "warn",
+      "prefer-promise-reject-errors": "warn",
 
       /*
        * TypeScript
@@ -67,6 +69,8 @@ export default defineConfig([
         "warn",
         { prefer: "type-imports", fixStyle: "separate-type-imports" }
       ],
+      "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/no-require-imports": "warn",
       "import-x/consistent-type-specifier-style": ["warn", "prefer-top-level"],
 
       /*
