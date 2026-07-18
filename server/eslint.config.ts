@@ -56,7 +56,7 @@ export default defineConfig([
        * Base
        */
       "no-unused-vars": "off",
-      "no-console": ["warn", { allow: ["log"] }],
+      "no-console": ["warn", { allow: ["log", "error"] }],
       "no-debugger": "warn",
       "prefer-promise-reject-errors": "warn",
 
