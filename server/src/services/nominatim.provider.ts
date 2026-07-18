@@ -7,7 +7,7 @@ const NOMINATIM_SEARCH_DEFAULT_PARAMS = {
   "accept-language": "en"
 };
 
-interface NominatimSearchResult {
+export interface NominatimSearchResult {
   place_id: number;
   licence: string;
   osm_type: "node" | "way" | "relation";
@@ -34,12 +34,9 @@ interface NominatimSearchResult {
  * Builds a Nominatim search URL with the provided query and optional limit.
  * @param query - The search query (city name).
  * @param limit - Optional limit for the number of results (default is 5).
- * @returns A Promise that resolves to the constructed URL.
+ * @returns The constructed Nominatim URL.
  */
-export async function buildNominatimSearchUrl(
-  query: string,
-  limit?: number
-): Promise<URL> {
+export function buildNominatimSearchUrl(query: string, limit?: number): URL {
   // Base URL for Nominatim search
   const url = new URL("https://nominatim.openstreetmap.org/search");
 

@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { AppError } from "../common/errors/AppError.ts";
 import { isNonEmptyString } from "../helpers/stringHelpers.ts";
-import { fetchCitySuggestions } from "../services/nominatim.service.ts";
+import { fetchCitySuggestions } from "../services/cities.service.ts";
 
 const router = Router();
 

@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import nominatimRoutes from "./nominatim.routes.ts";
+import citiesRoutes from "./cities.routes.ts";
 
 const router = Router();
 
-router.use("/nominatim", nominatimRoutes);
+router.use("/cities", citiesRoutes);
 
 export default router;
