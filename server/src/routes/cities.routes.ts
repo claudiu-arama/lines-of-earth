@@ -18,6 +18,7 @@ router.get("/search", async (req, res) => {
   }
 
   const suggestions = await fetchCitySuggestions(query);
+
   res.json(suggestions);
 });
 

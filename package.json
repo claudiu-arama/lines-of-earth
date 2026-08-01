@@ -9,7 +9,11 @@
     "lint": "eslint .",
     "typecheck": "tsc --build",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docker:up": "docker compose up",
+    "docker:down": "docker compose down",
+    "docker:redis:up": "docker compose up -d redis",
+    "docker:redis:down": "docker compose down redis"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

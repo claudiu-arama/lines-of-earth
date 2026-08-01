@@ -1,34 +1,12 @@
 import { AppError } from "../common/errors/AppError.ts";
-import { osmFetch } from "../common/http/osmFetch.ts";
 import { isNonEmptyArray } from "../helpers/arrayHelpers.ts";
-
-import {
-  buildNominatimSearchUrl,
-  parseNominatimSearchResults
-} from "./nominatim.provider.ts";
-
-import type { NominatimSearchResult } from "./nominatim.provider.ts";
+import { nominatimProvider } from "../providers/geocoding/nominatim.provider.ts";
 
 export async function fetchCitySuggestions(query: string) {
-  const url = buildNominatimSearchUrl(query);
-
-  const response = await osmFetch(url);
-
-  // Provider unavailable
-  if (!response.ok) {
-    throw new AppError({
-      statusCode: 502,
-      errorCode: "CITIES_SERVICE_UNAVAILABLE",
-      message: "Unable to reach Nominatim API. Please try again later.",
-      details: { provider: "nominatim" },
-      expose: false
-    });
-  }
-
-  const data = (await response.json()) as NominatimSearchResult[];
+  const results = await nominatimProvider.search(query, 10);
 
   // Empty results
-  if (!isNonEmptyArray(data)) {
+  if (!isNonEmptyArray(results)) {
     throw new AppError({
       statusCode: 404,
       errorCode: "CITIES_NOT_FOUND",
@@ -36,5 +14,5 @@ export async function fetchCitySuggestions(query: string) {
     });
   }
 
-  return parseNominatimSearchResults(data);
+  return results;
 }

@@ -1,0 +1,16 @@
+FROM node:26-alpine
+
+WORKDIR /app
+
+RUN npm install -g pnpm@11.12.0
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY server/package.json server/package.json
+
+RUN pnpm install --frozen-lockfile --filter server...
+
+COPY server server
+
+WORKDIR /app/server
+
+CMD ["pnpm", "dev"]

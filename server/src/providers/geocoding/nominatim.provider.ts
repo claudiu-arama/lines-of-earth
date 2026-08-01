@@ -2,8 +2,9 @@
 // https://nominatim.org/release-docs/develop/api/Overview/
 // https://nominatim.org/release-docs/develop/api/Output/#geocodejson
 
-import { AppError } from "../common/errors/AppError.ts";
-import { createGeocodingProvider } from "../providers/geocoding/createGeocodingProvider.ts";
+import { AppError } from "../../common/errors/AppError.ts";
+
+import { createGeocodingProvider } from "./createGeocodingProvider.ts";
 
 // Types
 export interface NominatimGeocodingProperties {
