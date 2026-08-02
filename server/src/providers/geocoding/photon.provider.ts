@@ -3,19 +3,23 @@
 
 import { createGeocodingProvider } from "./createGeocodingProvider.ts";
 
-import type { CitySuggestion } from "../../services/cities.types.ts";
+import type { GeocodingResult } from "./geocoding.types.ts";
+
+// Constants
 
 const PHOTON_SEARCH_DEFAULT_PARAMS = {
   limit: "5",
   lang: "en"
 };
 
-export interface IPhoneSearchResponse {
+// Types
+
+export interface PhoneSearchResponse {
   type: "FeatureCollection";
-  features: IPhotonSearchFeature[];
+  features: PhotonSearchFeature[];
 }
 
-export interface IPhotonSearchFeature {
+export interface PhotonSearchFeature {
   type: "Feature";
   geometry: {
     type: "Point";
@@ -31,7 +35,8 @@ export interface IPhotonSearchFeature {
   };
 }
 
-export const photonProvider = createGeocodingProvider<IPhoneSearchResponse>({
+// Provider
+export const photonProvider = createGeocodingProvider<PhoneSearchResponse>({
   name: "photon",
   baseUrl: "https://photon.komoot.io",
   searchPath: "/api",
@@ -40,16 +45,21 @@ export const photonProvider = createGeocodingProvider<IPhoneSearchResponse>({
     limit: limit?.toString() ?? PHOTON_SEARCH_DEFAULT_PARAMS.limit,
     lang: PHOTON_SEARCH_DEFAULT_PARAMS.lang
   }),
-  parseData: (data: IPhoneSearchResponse) => {
+  parseData: (data: PhoneSearchResponse) => {
     return parsePhotonSearchResults(data.features);
   }
 });
 
+// Helper function to parse Photon search results
+// into GeocodingResult format
 function parsePhotonSearchResults(
-  results: IPhotonSearchFeature[]
-): CitySuggestion[] {
+  results: PhotonSearchFeature[]
+): GeocodingResult[] {
   return results.map((result) => ({
-    id: result.properties.osm_id.toString(),
+    osm_id: result.properties.osm_id,
+    osm_type: result.properties.osm_type,
+    city: result.properties.city ?? result.properties.name,
+    country: result.properties.country,
     name: result.properties.name,
     geolocation: {
       lat: result.geometry.coordinates[1],

@@ -1,33 +1,12 @@
 import { AppError } from "../../common/errors/AppError.ts";
 import { osmFetch } from "../../common/http/osmFetch.ts";
 
-import type { CitySuggestion } from "../../services/cities.types.ts";
+import type { GeocodingResponse, GeocodingResult } from "./geocoding.types.ts";
 
 // Types
 
-export interface IGeocodingFeature {
-  type: "Feature";
-  geometry: {
-    type: "Point";
-    coordinates: [number, number];
-  };
-  properties: {
-    name: string;
-    country: string;
-    city?: string;
-    state?: string;
-    osm_id: number;
-    osm_type: "node" | "way" | "relation";
-  };
-}
-
-export interface IGeocodingResponse {
-  type: "FeatureCollection";
-  features: IGeocodingFeature[];
-}
-
 export interface GeocodingProvider {
-  search: (query: string, limit?: number) => Promise<CitySuggestion[]>;
+  search: (query: string, limit?: number) => Promise<GeocodingResult[]>;
 }
 
 export interface GeocodingProviderConfig<TData> {
@@ -35,15 +14,19 @@ export interface GeocodingProviderConfig<TData> {
   baseUrl: string;
   searchPath: string;
   buildSearchParams: (query: string, limit?: number) => Record<string, string>;
-  parseData?: (data: TData, query?: string, limit?: number) => CitySuggestion[];
+  parseData?: (
+    data: TData,
+    query?: string,
+    limit?: number
+  ) => GeocodingResult[];
 }
 
 // Default parseData function
 function defaultParseData(
-  data: IGeocodingResponse,
+  data: GeocodingResponse,
   query?: string,
   limit?: number
-): CitySuggestion[] {
+): GeocodingResult[] {
   if (!Array.isArray(data?.features)) {
     throw new Error(
       "Expected a GeoJSON FeatureCollection with a 'features' array."
@@ -66,14 +49,14 @@ function defaultParseData(
  * @param config IGeocodingProviderConfig<TData> - The configuration for the geocoding provider.
  * @returns GeocodingProvider - The created geocoding provider.
  */
-export function createGeocodingProvider<TData = IGeocodingResponse>(
+export function createGeocodingProvider<TData = GeocodingResponse>(
   config: GeocodingProviderConfig<TData>
 ): GeocodingProvider {
   const parseData = (config.parseData ?? defaultParseData) as (
     data: TData,
     query?: string,
     limit?: number
-  ) => CitySuggestion[];
+  ) => GeocodingResult[];
 
   return {
     async search(query, limit) {
