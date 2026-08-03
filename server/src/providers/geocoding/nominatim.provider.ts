@@ -7,6 +7,7 @@ import { AppError } from "../../common/errors/AppError.ts";
 import { createGeocodingProvider } from "./createGeocodingProvider.ts";
 
 // Types
+
 export interface NominatimGeocodingProperties {
   place_id: number;
   osm_type: "node" | "way" | "relation";
