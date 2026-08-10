@@ -1,16 +1,17 @@
+import type { CityDataInterface } from "../helpers/globals";
+
 import style from "./CityHits.module.scss";
 
-// TODO: replace `any` with proper types
 export const CityHits = ({
   cityData,
   handleCitySelect
 }: {
-  cityData: any;
-  handleCitySelect: any;
+  cityData: CityDataInterface[];
+  handleCitySelect: (city: CityDataInterface) => void;
 }) => {
   return (
     <>
-      {cityData?.map((city: any, i: any) => (
+      {cityData?.map((city: CityDataInterface, i: number) => (
         <div
           key={i}
           className={style.suggestionItem}

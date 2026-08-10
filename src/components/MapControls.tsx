@@ -56,8 +56,8 @@ export function MapControls({
   isRoadError,
   isRoadErrorInfo,
   isRoadFetching,
-  cityData,
-  handleCitySelect,
+  cityData, // passed to CityHits component
+  handleCitySelect, // passed to CityHits component
   renderDuration,
   fetchDuration,
   visibleLayers,
@@ -66,13 +66,13 @@ export function MapControls({
   setShowFrame,
   frameOrientation,
   setFrameOrientation,
-  setQueryCity,
-  setPathObjects,
-  setInputValue,
-  canvasRef,
-  transformRef,
-  queryCity,
-  setLayerColors,
+  setQueryCity, // used for clearing the map when clicking "Clear map" button
+  setPathObjects, // used for clearing the map when clicking "Clear map" button
+  setInputValue, // used for clearing the map when clicking "Clear map" button
+  canvasRef, // sent to exportToSVG function for exporting the map as SVG
+  transformRef, // sent to exportToSVG function for exporting the map as SVG
+  queryCity, // sent to exportToSVG function for exporting the map as SVG
+  setLayerColors, // used for updating the color of each layer when changed in the ColorPicker component
   layerColors
 }: {
   pathObjects: any;
@@ -179,7 +179,7 @@ export function MapControls({
                     <ColorPicker
                       value={layerColors[layer]}
                       // TODO: replace `any` with proper types
-                      onChange={(color: any) =>
+                      onChange={(color: string) =>
                         setLayerColors((prev: any) => ({
                           ...prev,
                           [layer]: color

@@ -9,6 +9,7 @@ import { arrayofAPIs as api } from "constants/apis";
 import { MAP_PRESETS } from "constants/layerConfigs";
 import { BLURRED_PLACEHOLDER } from "constants/staticConstants";
 import { responseRoads } from "helpers/formatCityHelper";
+import type { CityDataInterface } from "helpers/globals";
 import { fetchCitySuggestions } from "helpers/nominatimService";
 import { usePrecalculatePaths } from "hooks/data/usePrecalculatePaths";
 import { useRoadsData } from "hooks/data/useRoadsData";
@@ -26,21 +27,21 @@ const DEFAULT_LAYER = "ink-on-paper";
 
 export default function App() {
   // -- UI State --
-  const [inputValue, setInputValue] = useState("");
-  const [inputQuery, setInputQuery] = useState({
-    cityHit: "",
-    countryHit: ""
-  });
-  const [queryCity, setQueryCity] = useState(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [bgImageLoaded, setBgImageLoaded] = useState(false);
-  const [bgImageError, setBgImageError] = useState(false);
-  const [showFrame, setShowFrame] = useState(true);
-  const [frameOrientation, setFrameOrientation] = useState("portrait");
-  const [layerScheme, setLayerScheme] = useState(MAP_PRESETS[DEFAULT_LAYER]);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [inputQuery, setInputQuery] = useState<string>("");
+  // Dev note -> test if this is needed/enhancement or relic
+  // cityHit: "",
+  // countryHit: ""
+  const [queryCity, setQueryCity] = useState<CityDataInterface | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [bgImageLoaded, setBgImageLoaded] = useState<boolean>(false);
+  const [bgImageError, setBgImageError] = useState<boolean>(false);
+  const [showFrame, setShowFrame] = useState<boolean>(true);
+  const [frameOrientation, setFrameOrientation] = useState<string>("portrait");
+  // const [layerScheme, setLayerScheme] = useState(MAP_PRESETS[DEFAULT_LAYER]);
   // -- Data State --
-  const [pathObjects, setPathObjects] = useState(null); // The cached Path2D objects
-  const [visibleLayers, setVisibleLayers] = useState({
+  const [pathObjects, setPathObjects] = useState<Path2D | null>(null); // The cached Path2D objects
+  const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({
     water: true,
     express: true,
     arterial: true,
@@ -54,21 +55,24 @@ export default function App() {
     canvas: true
   });
   // -- Performance Data --
-  const [fetchDuration, setFetchDuration] = useState(null);
-  const [renderDuration, setRenderDuration] = useState(null);
-  const [currentMirrorIndex, setCurrentMirrorIndex] = useState(0);
+  const [fetchDuration, setFetchDuration] = useState<number | null>(null);
+  const [renderDuration, setRenderDuration] = useState<number | null>(null);
+  const [currentMirrorIndex, setCurrentMirrorIndex] = useState<number>(0);
   // -- Camera & Interaction --
-  const drawSceneRef = useRef(null);
-  const transformRef = useRef({ x: 0, y: 0, scale: 1 });
-  const canvasRef = useRef(null);
-  const containerRef = useRef(null);
-  const mapViewportRef = useRef(null);
-  const bgImageRef = useRef(null);
+  const transformRef = useRef<{ x: number; y: number; scale: number }>({
+    x: 0,
+    y: 0,
+    scale: 1
+  });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapViewportRef = useRef<HTMLDivElement | null>(null);
+  const bgImageRef = useRef<HTMLImageElement | null>(null);
   const queryClient = useQueryClient();
-  //debug
+  //Dev note - what is this
   // TODO: replace `any` with proper types
   (window as any).__qc = queryClient;
-  const lastSizeRef = useRef({ w: 0, h: 0 });
+  const lastSizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const [layerColors, setLayerColors] = useState(
     Object.fromEntries(
       Object.entries(MAP_PRESETS[DEFAULT_LAYER].config).map(([key, cfg]) => [
@@ -97,7 +101,7 @@ export default function App() {
     isError: isRoadError,
     isFetching: isRoadFetching,
     isSuccess: isRoadsSuccess,
-    isPending: isRoadsPending,
+    // isPending: isRoadsPending,
     error: isRoadErrorInfo
   } = useRoadsData(
     queryCity,
@@ -147,16 +151,14 @@ export default function App() {
   // MARK: responsive canvas resizer
   useCanvasResizer(canvasRef, drawScene);
 
-  // TODO: replace `any` with proper types
-  const handleCitySelect = (city: any) => {
+  const handleCitySelect = (city: CityDataInterface) => {
     setPathObjects(null);
     setRenderDuration(null);
     setFetchDuration(null);
     setQueryCity(city);
   };
 
-  // TODO: replace `any` with proper types
-  const handleOnChange = (e: any) => {
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 
@@ -164,7 +166,7 @@ export default function App() {
     const timer = setTimeout(() => {
       setPathObjects(null);
       // TODO: replace `any` with proper types
-      setInputQuery(inputValue as any);
+      setInputQuery(inputValue as string);
     }, 500);
     return () => clearTimeout(timer);
   }, [inputValue]);
@@ -230,7 +232,7 @@ export default function App() {
         cityData={cityData}
         onCancelFetch={() => {
           queryClient.cancelQueries({ queryKey: ["roads"] });
-          setQueryCity(null);
+          setQueryCity("");
         }}
         pathObjects={pathObjects}
         showFrame={showFrame}
