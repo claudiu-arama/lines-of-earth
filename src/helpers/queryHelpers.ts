@@ -1,5 +1,6 @@
-// TODO: replace `any` with proper types
-export const getRoadsQuery = (city: any) => {
+import type { CityDataInterface } from "./globals";
+
+export const getRoadsQuery = (city: CityDataInterface) => {
   if (!city) return "";
 
   const highways = `
@@ -37,8 +38,6 @@ export const getRoadsQuery = (city: any) => {
         area(${city.areaId})->.searchArea;
         (
             ${highways.replaceAll("AREA", "area.searchArea")}
-            ${waterways.replaceAll("AREA", "area.searchArea")}
-            ${landmarks.replaceAll("AREA", "area.searchArea")}
             );
             out geom qt;
             `;

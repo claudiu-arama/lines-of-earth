@@ -1,7 +1,10 @@
 import { useLayoutEffect } from "react";
 
 // TODO: replace `any` with proper types
-export const useCanvasResizer = (canvasRef: any, drawScene: any) => {
+export const useCanvasResizer = (
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  drawScene: any
+) => {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;

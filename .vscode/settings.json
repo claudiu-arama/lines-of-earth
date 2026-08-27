@@ -5,6 +5,6 @@
     "source.fixAll.eslint": "explicit"
   },
   "editor.tokenColorCustomizations": {
-    "comments": "#e8e817"
+    "comments": "#28db79"
   }
 }

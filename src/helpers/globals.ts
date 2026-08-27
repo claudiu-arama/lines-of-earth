@@ -3,6 +3,27 @@ export interface CityDataInterface {
   type: string;
   lat: string;
   lon: string;
-  areaID: number | null;
+  areaId: number | null;
   boundingbox: string[];
+}
+
+type NominatimAddress = {
+  [key: string]: string | undefined;
+  city_district?: string;
+  county?: string;
+  state_district?: string;
+  state?: string;
+  country?: string;
+  country_code?: string;
+};
+
+export interface nominatimResponseInterface {
+  display_name: string;
+  osm_type: string;
+  osm_id: number | null;
+  boundingbox: string[];
+  lat: string;
+  lon: string;
+  addresstype: string;
+  address: NominatimAddress;
 }

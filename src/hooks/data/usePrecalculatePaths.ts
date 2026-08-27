@@ -1,25 +1,17 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 import { LAYER_MAPPING_SETS } from "constants/layerConfigs";
 import { projectCoordinateToMeters } from "helpers/locationHelpers";
 import { simplifyPath } from "helpers/mathHelpers";
 
-//debug
-const pathLayerRegistry = new FinalizationRegistry((label) => {
-  console.log(
-    `%c[GC] pathLayers for "${label}" was collected`,
-    "color: green; font-weight: bold"
-  );
-});
-
 // TODO: replace `any` with proper types
 export function usePrecalculatePaths(
   processedData: any,
-  containerRef: any,
+  containerRef: React.RefObject<HTMLDivElement | null>,
   setPathObjects: any,
-  transformRef: any,
+  transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
   drawScene: any,
-  setRenderDuration: any
+  renderDurationRef: React.RefObject<number | null>
 ) {
   useEffect(() => {
     if (!processedData) {
@@ -29,7 +21,10 @@ export function usePrecalculatePaths(
     let cancelled = false;
     const startTime = performance.now();
     const { roads, bounds } = processedData;
-    const { clientWidth: width } = containerRef.current;
+    const { clientWidth: width } =
+      containerRef && containerRef.current
+        ? containerRef.current
+        : { clientWidth: 0 };
 
     const maxSpanLong = bounds.maxLat - bounds.minLat;
     const maxSpanLat = bounds.maxLon - bounds.minLon;
@@ -103,13 +98,8 @@ export function usePrecalculatePaths(
 
     if (!cancelled) {
       setPathObjects(pathLayers);
-      setRenderDuration((performance.now() - startTime).toFixed(2));
-      //debug
-      const label = `city-${Date.now()}`;
-      // TODO: replace `any` with proper types
-      (window as any).__cityRefs = (window as any).__cityRefs || {};
-      (window as any).__cityRefs[label] = new WeakRef(pathLayers);
-      console.log(`Registered pathLayers as "${label}"`);
+      renderDurationRef.current =
+        Math.round((performance.now() - startTime) * 100) / 100;
       if (containerRef.current) {
         const cx = containerRef.current.clientWidth / 2;
         const cy = containerRef.current.clientHeight / 2;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { QueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -40,7 +41,9 @@ export default function App() {
   const [frameOrientation, setFrameOrientation] = useState<string>("portrait");
   // const [layerScheme, setLayerScheme] = useState(MAP_PRESETS[DEFAULT_LAYER]);
   // -- Data State --
-  const [pathObjects, setPathObjects] = useState<Path2D | null>(null); // The cached Path2D objects
+  const [pathObjects, setPathObjects] = useState<Record<string, Path2D> | null>(
+    null
+  ); // The cached Path2D objects
   const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({
     water: true,
     express: true,
@@ -55,9 +58,9 @@ export default function App() {
     canvas: true
   });
   // -- Performance Data --
-  const [fetchDuration, setFetchDuration] = useState<number | null>(null);
-  const [renderDuration, setRenderDuration] = useState<number | null>(null);
-  const [currentMirrorIndex, setCurrentMirrorIndex] = useState<number>(0);
+  const fetchDurationRef = useRef<number | null>(null);
+  const renderDurationRef = useRef<number | null>(null);
+  const currentMirrorIndexRef = useRef<number>(0);
   // -- Camera & Interaction --
   const transformRef = useRef<{ x: number; y: number; scale: number }>({
     x: 0,
@@ -69,9 +72,6 @@ export default function App() {
   const mapViewportRef = useRef<HTMLDivElement | null>(null);
   const bgImageRef = useRef<HTMLImageElement | null>(null);
   const queryClient = useQueryClient();
-  //Dev note - what is this
-  // TODO: replace `any` with proper types
-  (window as any).__qc = queryClient;
   const lastSizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const [layerColors, setLayerColors] = useState(
     Object.fromEntries(
@@ -104,25 +104,25 @@ export default function App() {
     // isPending: isRoadsPending,
     error: isRoadErrorInfo
   } = useRoadsData(
-    queryCity,
-    responseRoads,
+    queryCity as CityDataInterface,
+    responseRoads as any,
     {
       enabled: !!queryCity,
       staleTime: 1000 * 60 * 3,
       gcTime: 1000 * 60 * 3
     },
-    setCurrentMirrorIndex,
-    setFetchDuration,
-    queryClient
+    currentMirrorIndexRef,
+    fetchDurationRef,
+    queryClient as QueryClient
   );
 
   // MARK: Draw/Render Logic
   const drawScene = useDrawLogic(
-    canvasRef,
-    pathObjects,
-    transformRef,
-    visibleLayers,
-    layerColors
+    canvasRef as React.RefObject<HTMLCanvasElement>,
+    pathObjects as Record<string, Path2D> | null,
+    transformRef as React.RefObject<{ x: number; y: number; scale: number }>,
+    visibleLayers as Record<string, boolean>,
+    layerColors as Record<string, string>
   );
 
   //MARK: keep map center
@@ -138,11 +138,11 @@ export default function App() {
   //MARK: precalculated paths
   usePrecalculatePaths(
     processedData,
-    containerRef,
+    containerRef as React.RefObject<HTMLDivElement | null>,
     setPathObjects,
-    transformRef,
-    drawScene,
-    setRenderDuration
+    transformRef as React.RefObject<{ x: number; y: number; scale: number }>,
+    drawScene as any,
+    renderDurationRef as React.RefObject<number | null>
   );
 
   // MARK: Camera Control
@@ -153,8 +153,8 @@ export default function App() {
 
   const handleCitySelect = (city: CityDataInterface) => {
     setPathObjects(null);
-    setRenderDuration(null);
-    setFetchDuration(null);
+    renderDurationRef.current = null;
+    fetchDurationRef.current = null;
     setQueryCity(city);
   };
 
@@ -165,7 +165,6 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setPathObjects(null);
-      // TODO: replace `any` with proper types
       setInputQuery(inputValue as string);
     }, 500);
     return () => clearTimeout(timer);
@@ -179,9 +178,8 @@ export default function App() {
     error
   } = useQuery({
     queryKey: ["cityQuery", inputQuery],
-    // TODO: replace `any` with proper types
-    queryFn: () => fetchCitySuggestions(inputQuery as any),
-    enabled: (inputQuery as any).length > 2,
+    queryFn: () => fetchCitySuggestions(inputQuery as string),
+    enabled: (inputQuery as string).length > 2,
     retry: false,
     staleTime: 1000 * 60 * 5
   });
@@ -194,8 +192,8 @@ export default function App() {
           setIsCollapsed={setIsCollapsed}
           pathObjects={pathObjects}
           processedData={processedData}
-          renderDuration={renderDuration}
-          fetchDuration={fetchDuration}
+          renderDurationRef={renderDurationRef}
+          fetchDurationRef={fetchDurationRef}
           canvasRef={canvasRef}
           showFrame={showFrame}
           transformRef={transformRef}
@@ -227,12 +225,12 @@ export default function App() {
         isRoadFetching={isRoadFetching}
         isRoadsSuccess={isRoadsSuccess}
         isRoadError={isRoadError}
-        currentMirrorIndex={currentMirrorIndex}
+        currentMirrorIndexRef={currentMirrorIndexRef}
         apiLength={api.length}
         cityData={cityData}
         onCancelFetch={() => {
           queryClient.cancelQueries({ queryKey: ["roads"] });
-          setQueryCity("");
+          setQueryCity(null);
         }}
         pathObjects={pathObjects}
         showFrame={showFrame}

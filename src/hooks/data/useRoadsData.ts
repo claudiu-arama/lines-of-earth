@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 
 import { arrayofAPIs as api } from "constants/apis";
@@ -9,9 +10,9 @@ export const useRoadsData = (
   queryCity: any,
   responseRoads: any,
   options: any,
-  setCurrentMirrorIndex: any,
-  setFetchDuration: any,
-  queryClient: any
+  currentMirrorIndexRef: React.RefObject<number>,
+  fetchDurationRef: any,
+  queryClient: QueryClient
 ) => {
   return useQuery({
     queryKey: ["roads", queryCity?.areaId ?? null],
@@ -22,14 +23,13 @@ export const useRoadsData = (
         getRoadsQuery(queryCity),
         0,
         null,
-        setCurrentMirrorIndex,
+        currentMirrorIndexRef,
         signal,
         performance.now(),
-        setFetchDuration,
+        fetchDurationRef,
         queryClient,
         queryCity
       );
-      console.log(responseRoads);
       return responseRoads(rawResonse);
     },
     ...options,

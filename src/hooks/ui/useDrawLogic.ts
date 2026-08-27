@@ -1,25 +1,28 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { LAYER_KEYS, MAP_PRESETS } from "constants/layerConfigs";
 import { SCALE_BASE } from "constants/staticConstants";
 
-// TODO: replace `any` with proper types
 export const useDrawLogic = (
-  canvasRef: any,
-  pathObjects: any,
-  transformRef: any,
-  visibleLayers: any,
-  layerColors: any
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  pathObjects: Record<string, Path2D> | null,
+  transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
+  visibleLayers: Record<string, boolean>,
+  layerColors: Record<string, string>
 ) => {
-  const ctxRef = useRef<any>(null);
-  const offscreenRef = useRef<any>(null);
-  const baseTransformRef = useRef<any>(null);
-  const timeoutRef = useRef<any>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D>(null);
+  const offscreenRef = useRef<OffscreenCanvas | null>(null);
+  const baseTransformRef = useRef<{
+    x: number;
+    y: number;
+    scale: number;
+  } | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const latestPropsRef = useRef<any>({});
   latestPropsRef.current = { pathObjects, visibleLayers, layerColors };
   //expensive draw
-  const drawFull = () => {
+  const drawFull = useCallback(() => {
     const canvas = canvasRef.current;
 
     const {
@@ -34,7 +37,7 @@ export const useDrawLogic = (
       ctxRef.current = canvas.getContext("2d", {
         alpha: 1,
         desynchronized: true
-      });
+      }) as CanvasRenderingContext2D | null;
     }
     const ctx = ctxRef.current;
     const dpr = window.devicePixelRatio || 1;
@@ -58,38 +61,45 @@ export const useDrawLogic = (
       offscreenRef.current = new OffscreenCanvas(targetWidth, targetHeight);
     }
     const offscreen = offscreenRef.current;
-    const offCtx = offscreen.getContext("2d");
+    const offCtx = offscreen.getContext(
+      "2d"
+    ) as CanvasRenderingContext2D | null;
 
     const bgColor =
       currentColors["canvas"] ||
       MAP_PRESETS["ink-on-paper"].config.canvas.color ||
       "#fbfffa";
 
-    offCtx.clearRect(0, 0, targetWidth, targetHeight);
-    offCtx.fillStyle = bgColor;
-    offCtx.fillRect(0, 0, targetWidth, targetHeight);
+    offCtx?.clearRect(0, 0, targetWidth, targetHeight);
+    if (offCtx) {
+      offCtx.fillStyle = bgColor;
+    }
+    offCtx?.fillRect(0, 0, targetWidth, targetHeight);
 
     const offsetX = multiplier > 1 ? Math.round(canvas.width / 2) : 0;
     const offsetY = multiplier > 1 ? Math.round(canvas.height / 2) : 0;
 
-    offCtx.save();
-    offCtx.translate(offsetX, offsetY);
-    offCtx.scale(dpr, dpr);
-    offCtx.translate(x, y);
-    offCtx.scale(scale, scale);
+    offCtx?.save();
+    offCtx?.translate(offsetX, offsetY);
+    offCtx?.scale(dpr, dpr);
+    offCtx?.translate(x, y);
+    offCtx?.scale(scale, scale);
 
     if (currentVisible.water && currentPaths.waterFill) {
-      offCtx.save();
-      offCtx.fillStyle =
-        currentColors["water"] ||
-        MAP_PRESETS["ink-on-paper"].config.water.color;
-      offCtx.globalAlpha = 1;
-      offCtx.fill(currentPaths.waterFill, "nonzero");
-      offCtx.restore();
+      offCtx?.save();
+      if (offCtx) {
+        offCtx.fillStyle =
+          currentColors["water"] ||
+          MAP_PRESETS["ink-on-paper"].config.water.color;
+        offCtx.globalAlpha = 1;
+        offCtx.fill(currentPaths.waterFill, "nonzero");
+        offCtx.restore();
+      }
     }
-    offCtx.lineJoin = "round";
-    offCtx.lineCap = "round";
-
+    if (offCtx) {
+      offCtx.lineJoin = "round";
+      offCtx.lineCap = "round";
+    }
     for (let i = 0; i < LAYER_KEYS.length; i++) {
       const key = LAYER_KEYS[i];
       // TODO: replace `any` with proper types
@@ -97,25 +107,17 @@ export const useDrawLogic = (
       if (!currentVisible[key] || scale <= config.minScale) continue;
       const path = currentPaths[key];
       if (!path) continue;
-      offCtx.strokeStyle = currentColors[key] || config.color;
-      offCtx.lineWidth = Math.max(config.weight / scale, 0.25);
-      offCtx.stroke(path);
+      if (offCtx) {
+        offCtx.strokeStyle = currentColors[key] || config.color;
+        offCtx.lineWidth = Math.max(config.weight / scale, 0.25);
+      }
+      offCtx?.stroke(path);
     }
 
-    if (currentPaths.labels) {
-      offCtx.font = `${12 / scale}px Arial`;
-      offCtx.fillStyle = "#666666";
-      offCtx.textAlign = "center";
-      // TODO: replace `any` with proper types
-      currentPaths.labels.forEach((label: any) => {
-        offCtx.fillText(label.text, label.x, label.y);
-      });
-    }
+    offCtx?.restore();
 
-    offCtx.restore();
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(
+    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    ctx?.drawImage(
       offscreen,
       offsetX,
       offsetY,
@@ -128,9 +130,9 @@ export const useDrawLogic = (
     );
 
     baseTransformRef.current = { ...transformRef.current };
-  };
+  }, [canvasRef, transformRef]);
   //cheap-er draw
-  const drawPan = () => {
+  const drawPan = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !offscreenRef.current || !baseTransformRef.current) {
       drawFull();
@@ -141,7 +143,7 @@ export const useDrawLogic = (
       ctxRef.current = canvas.getContext("2d", {
         alpha: 1,
         desynchronized: true
-      });
+      }) as CanvasRenderingContext2D | null;
     }
     const ctx = ctxRef.current;
     const dpr = window.devicePixelRatio || 1;
@@ -163,10 +165,12 @@ export const useDrawLogic = (
       currentColors["canvas"] ||
       MAP_PRESETS["ink-on-paper"].config.canvas.color ||
       "#fbfffa";
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (ctx) {
+      ctx.fillStyle = bgColor;
+    }
+    ctx?.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.drawImage(
+    ctx?.drawImage(
       offscreenRef.current,
       sourceX,
       sourceY,
@@ -177,22 +181,22 @@ export const useDrawLogic = (
       canvas.width,
       canvas.height
     );
-  };
+  }, [canvasRef, transformRef, drawFull]);
 
-  const drawScene = () => {
+  const drawScene = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
     drawPan();
-  };
+  }, [drawPan]);
 
-  const drawSceneFull = () => {
+  const drawSceneFull = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       drawFull();
     }, 50);
-  };
+  }, [drawFull]);
 
   useEffect(() => {
     ctxRef.current = null;
@@ -203,13 +207,15 @@ export const useDrawLogic = (
     };
   }, [canvasRef]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    latestPropsRef.current = { pathObjects, visibleLayers, layerColors };
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
     drawFull();
-  }, [pathObjects, visibleLayers, layerColors]);
+  }, [pathObjects, visibleLayers, layerColors, drawFull]);
 
   return { drawScene, drawSceneFull };
 };

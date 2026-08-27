@@ -58,8 +58,8 @@ export function MapControls({
   isRoadFetching,
   cityData, // passed to CityHits component
   handleCitySelect, // passed to CityHits component
-  renderDuration,
-  fetchDuration,
+  renderDurationRef,
+  fetchDurationRef,
   visibleLayers,
   setVisibleLayers,
   showFrame,
@@ -87,8 +87,8 @@ export function MapControls({
   isRoadFetching: any;
   cityData: any;
   handleCitySelect: any;
-  renderDuration: any;
-  fetchDuration: any;
+  renderDurationRef: any;
+  fetchDurationRef: any;
   visibleLayers: any;
   setVisibleLayers: any;
   showFrame: any;
@@ -258,15 +258,19 @@ export function MapControls({
                   {processedData?.roads.length.toLocaleString()}
                 </span>
               </div>
-              {renderDuration && (
+              {renderDurationRef.current !== null && (
                 <div className={style.statRow}>
                   <span className={style.statLabel}>Render time</span>
-                  <span className={style.statValue}>{renderDuration} ms</span>
+                  <span className={style.statValue}>
+                    {renderDurationRef.current} ms
+                  </span>
                 </div>
               )}
               <div className={style.statRow}>
                 <span className={style.statLabel}>Network</span>
-                <span className={style.statValue}>{fetchDuration} ms</span>
+                <span className={style.statValue}>
+                  {fetchDurationRef.current} ms
+                </span>
               </div>
             </div>
           </div>

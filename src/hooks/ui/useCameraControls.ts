@@ -23,7 +23,7 @@ export const useCameraControls = (
   }, [drawScene, drawSceneFull]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = canvasRef?.current;
     if (!canvas) return;
 
     // TODO: replace `any` with proper types
