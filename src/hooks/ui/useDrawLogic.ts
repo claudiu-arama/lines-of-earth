@@ -2,6 +2,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { LAYER_KEYS, MAP_PRESETS } from "constants/layerConfigs";
 import { SCALE_BASE } from "constants/staticConstants";
+type mapPresets = {
+  [key: string]: {
+    color: string;
+    weight?: number;
+    minScale: number;
+  };
+};
 
 export const useDrawLogic = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
@@ -102,14 +109,16 @@ export const useDrawLogic = (
     }
     for (let i = 0; i < LAYER_KEYS.length; i++) {
       const key = LAYER_KEYS[i];
-      // TODO: replace `any` with proper types
-      const config = (MAP_PRESETS["ink-on-paper"].config as any)[key];
+      const config = (MAP_PRESETS["ink-on-paper"].config as mapPresets)[key];
       if (!currentVisible[key] || scale <= config.minScale) continue;
       const path = currentPaths[key];
       if (!path) continue;
       if (offCtx) {
         offCtx.strokeStyle = currentColors[key] || config.color;
-        offCtx.lineWidth = Math.max(config.weight / scale, 0.25);
+        offCtx.lineWidth = Math.max(
+          config?.weight ? config.weight / scale : 0.25,
+          0.25
+        );
       }
       offCtx?.stroke(path);
     }

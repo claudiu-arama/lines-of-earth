@@ -10,7 +10,7 @@ import { arrayofAPIs as api } from "constants/apis";
 import { MAP_PRESETS } from "constants/layerConfigs";
 import { BLURRED_PLACEHOLDER } from "constants/staticConstants";
 import { responseRoads } from "helpers/formatCityHelper";
-import type { CityDataInterface } from "helpers/globals";
+import type { CityDataInterface, DrawScene } from "helpers/globals";
 import { fetchCitySuggestions } from "helpers/nominatimService";
 import { usePrecalculatePaths } from "hooks/data/usePrecalculatePaths";
 import { useRoadsData } from "hooks/data/useRoadsData";
@@ -112,7 +112,7 @@ export default function App() {
       gcTime: 1000 * 60 * 3
     },
     currentMirrorIndexRef,
-    fetchDurationRef,
+    fetchDurationRef as React.RefObject<number | null>,
     queryClient as QueryClient
   );
 
@@ -127,9 +127,9 @@ export default function App() {
 
   //MARK: keep map center
   useCenterCanvas(
-    canvasRef,
-    lastSizeRef,
-    transformRef,
+    canvasRef as React.RefObject<HTMLCanvasElement>,
+    lastSizeRef as React.RefObject<{ w: number; h: number }>,
+    transformRef as React.RefObject<{ x: number; y: number; scale: number }>,
     drawScene,
     showFrame,
     frameOrientation
@@ -141,7 +141,7 @@ export default function App() {
     containerRef as React.RefObject<HTMLDivElement | null>,
     setPathObjects,
     transformRef as React.RefObject<{ x: number; y: number; scale: number }>,
-    drawScene as any,
+    drawScene as DrawScene,
     renderDurationRef as React.RefObject<number | null>
   );
 

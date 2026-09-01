@@ -2,9 +2,9 @@ import { useLayoutEffect } from "react";
 
 // TODO: replace `any` with proper types
 export const useCenterCanvas = (
-  canvasRef: any,
-  lastSizeRef: any,
-  transformRef: any,
+  canvasRef: React.RefObject<HTMLCanvasElement>,
+  lastSizeRef: React.RefObject<{ w: number; h: number }>,
+  transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
   drawScene: any,
   showFrame: any,
   frameOrientation: any

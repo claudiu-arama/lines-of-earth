@@ -2,16 +2,17 @@ import type { QueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 
 import { arrayofAPIs as api } from "constants/apis";
+import type { CityDataInterface } from "helpers/globals";
 import { recursiveFetch } from "helpers/overpassService";
 import { getRoadsQuery } from "helpers/queryHelpers";
 
 // TODO: replace `any` with proper types
 export const useRoadsData = (
-  queryCity: any,
-  responseRoads: any,
+  queryCity: CityDataInterface | null,
+  responseRoads: (data: any) => Record<string, Path2D> | null,
   options: any,
   currentMirrorIndexRef: React.RefObject<number>,
-  fetchDurationRef: any,
+  fetchDurationRef: React.RefObject<number | null>,
   queryClient: QueryClient
 ) => {
   return useQuery({

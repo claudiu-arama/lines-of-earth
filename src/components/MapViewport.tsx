@@ -5,6 +5,8 @@ import { CityLabel } from "./CityLabel";
 import styles from "./MapViewport.module.scss";
 
 // TODO: replace `any` with proper types
+//TODO: refactor and use Context API to avoid prop drilling
+
 export function MapViewport({
   canvasRef,
   mapViewportRef,

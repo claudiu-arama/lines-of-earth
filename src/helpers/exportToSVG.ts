@@ -8,6 +8,8 @@ import { projectCoordinateToMeters } from "helpers/locationHelpers";
 import { simplifyPath } from "helpers/mathHelpers";
 
 // TODO: replace `any` with proper types
+//TODO: refactor and use Context API to avoid prop drilling
+
 export const exportToSVG = (
   processedData: any,
   canvasRef: any,

@@ -45,6 +45,7 @@ const ScaleBarBottom = () => (
 );
 
 // TODO: replace `any` with proper types
+//TODO: refactor and use Context API to avoid prop drilling
 export function MapControls({
   pathObjects,
   processedData,

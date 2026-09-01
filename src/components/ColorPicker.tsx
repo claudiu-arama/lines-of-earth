@@ -12,7 +12,7 @@ interface ColorPickerSpecs {
 
 export function ColorPicker({ value, onChange }: ColorPickerSpecs) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   useClickOutside(ref, open, () => setOpen(false));
 

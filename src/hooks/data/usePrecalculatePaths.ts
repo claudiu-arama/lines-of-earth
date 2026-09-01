@@ -1,16 +1,24 @@
 import React, { useEffect } from "react";
 
 import { LAYER_MAPPING_SETS } from "constants/layerConfigs";
+import type { DrawScene, responseRoadsInteface } from "helpers/globals";
 import { projectCoordinateToMeters } from "helpers/locationHelpers";
 import { simplifyPath } from "helpers/mathHelpers";
 
-// TODO: replace `any` with proper types
+type Road = {
+  type: string;
+  coordinates: number[][];
+  isClosed: boolean;
+};
+
 export function usePrecalculatePaths(
-  processedData: any,
+  processedData: responseRoadsInteface | null,
   containerRef: React.RefObject<HTMLDivElement | null>,
-  setPathObjects: any,
+  setPathObjects: React.Dispatch<
+    React.SetStateAction<Record<string, Path2D> | null>
+  >,
   transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
-  drawScene: any,
+  drawScene: DrawScene,
   renderDurationRef: React.RefObject<number | null>
 ) {
   useEffect(() => {
@@ -48,11 +56,10 @@ export function usePrecalculatePaths(
       miscellaneous: new Path2D()
     };
 
-    // TODO: replace `any` with proper types
-    roads.forEach((road: any) => {
+    roads.forEach((road: Road) => {
       if (cancelled) return;
-      const projectedPoints = road.coordinates.map((p: any) =>
-        projectCoordinateToMeters(p[0], p[1], centerLat, centerLon, 5)
+      const projectedPoints = road.coordinates.map((coord: number[]) =>
+        projectCoordinateToMeters(coord[0], coord[1], centerLat, centerLon, 5)
       );
       const simplified = simplifyPath(projectedPoints, 2.0);
       if (simplified.length < 2) return;
