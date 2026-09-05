@@ -34,6 +34,7 @@ function defaultParseData(
   }
   return data.features.map((feature) => ({
     osm_id: feature.properties.osm_id,
+    osm_type: feature.properties.osm_type,
     city: feature.properties.city ?? feature.properties.name,
     country: feature.properties.country,
     name: feature.properties.name,

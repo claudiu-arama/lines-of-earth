@@ -1,8 +1,5 @@
-interface RoadsQueryTarget {
-  osm_id: number;
-  osm_type: "node" | "way" | "relation";
-  boundingbox: [string, string, string, string];
-}
+import type { OsmType } from "../types/osm.types.ts";
+import type { RoadsQueryTarget } from "../types/roads.types.ts";
 
 /**
  * Builds an Overpass API query to fetch roads, waterways, and landmarks for a given target.
@@ -21,6 +18,12 @@ export function buildRoadsQuery(target: RoadsQueryTarget): string {
   } else {
     // Some results (e.g. certain Scottish cities) come back as a `node`
     // with no derivable area — fall back to a bounding box instead.
+    if (!target.boundingbox) {
+      throw new Error(
+        "boundingbox is required when no area can be derived from osm_id/osm_type"
+      );
+    }
+
     const [minLat, maxLat, minLon, maxLon] = target.boundingbox;
     scope = `${minLat},${minLon},${maxLat},${maxLon}`;
   }
@@ -42,10 +45,7 @@ export function buildRoadsQuery(target: RoadsQueryTarget): string {
 const RELATION_AREA_ID_OFFSET = 3600000000;
 const WAY_AREA_ID_OFFSET = 2400000000;
 
-const getOverpassAreaId = (
-  osmId: number,
-  osmType: "node" | "way" | "relation"
-): number | null => {
+const getOverpassAreaId = (osmId: number, osmType: OsmType): number | null => {
   if (osmType === "relation") {
     return osmId + RELATION_AREA_ID_OFFSET;
   }

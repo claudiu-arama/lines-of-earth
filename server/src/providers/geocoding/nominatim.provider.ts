@@ -6,11 +6,13 @@ import { AppError } from "../../common/errors/AppError.ts";
 
 import { createGeocodingProvider } from "./createGeocodingProvider.ts";
 
+import type { OsmType } from "../../types/osm.types.ts";
+
 // Types
 
 export interface NominatimGeocodingProperties {
   place_id: number;
-  osm_type: "node" | "way" | "relation";
+  osm_type: OsmType;
   osm_id: number;
   osm_key: string;
   osm_value: string;
@@ -87,6 +89,7 @@ export const nominatimProvider =
           city: feature.properties.geocoding.name,
           country: feature.properties.geocoding.country ?? "",
           osm_id: feature.properties.geocoding.osm_id,
+          osm_type: feature.properties.geocoding.osm_type,
           geolocation: {
             lat: feature.geometry.coordinates[1],
             lon: feature.geometry.coordinates[0]

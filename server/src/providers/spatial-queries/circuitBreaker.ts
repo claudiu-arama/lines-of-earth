@@ -12,17 +12,18 @@ export async function recordFailure(instanceId: string): Promise<void> {
     const now = Date.now();
     const member = `${now}:${randomUUID()}`;
     const windowStart = now - OVERPASS_CONFIG.failureWindowMs;
+    const key = failuresKey(instanceId);
 
     const pipeline = redisClient.pipeline();
-    pipeline.zadd(failuresKey(instanceId), now, member);
-    pipeline.zremrangebyscore(failuresKey(instanceId), "-inf", windowStart);
-    pipeline.zcard(failuresKey(instanceId));
+    pipeline.zadd(key, now, member);
+    pipeline.zremrangebyscore(key, "-inf", windowStart);
+    pipeline.zcard(key);
     pipeline.expire(
-      failuresKey(instanceId),
+      key,
       Math.ceil((OVERPASS_CONFIG.failureWindowMs * 2) / 1000)
     );
-
     const results = await pipeline.exec();
+
     const failureCount = results?.[2]?.[1] as number | undefined;
 
     if (

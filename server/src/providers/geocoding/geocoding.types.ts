@@ -1,3 +1,5 @@
+import type { OsmType } from "../../types/osm.types.ts";
+
 export interface GeocodingFeature {
   type: "Feature";
   geometry: {
@@ -10,7 +12,7 @@ export interface GeocodingFeature {
     city?: string;
     state?: string;
     osm_id: number;
-    osm_type: "node" | "way" | "relation";
+    osm_type: OsmType;
   };
 }
 
@@ -22,6 +24,7 @@ export interface GeocodingResponse {
 export interface GeocodingResult {
   place_id?: string;
   osm_id: number;
+  osm_type: OsmType;
   city: string;
   country: string;
   geolocation: Geolocation;

@@ -4,6 +4,7 @@
 import { createGeocodingProvider } from "./createGeocodingProvider.ts";
 
 import type { GeocodingResult } from "./geocoding.types.ts";
+import type { OsmType } from "../../types/osm.types.ts";
 
 // Constants
 
@@ -31,7 +32,7 @@ export interface PhotonSearchFeature {
     city?: string;
     state?: string;
     osm_id: number;
-    osm_type: "node" | "way" | "relation";
+    osm_type: OsmType;
   };
 }
 
