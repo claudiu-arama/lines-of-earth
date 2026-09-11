@@ -1,15 +1,16 @@
 import { ENCLOSED_WATER_TYPES, EXCLUDED_TYPES } from "constants/layerConfigs";
 
 import type {
-  responseRoadsData,
-  responseRoadsInteface,
-  responseRoadsIntefaceMember
-} from "./globals";
+  Geolocation,
+  ResponseRoads,
+  ResponseRoadsData,
+  ResponseRoadsMember
+} from "../types/globals.types";
 
-export const responseRoads = (newData: responseRoadsData) =>
+export const responseRoads = (newData: ResponseRoadsData) =>
   newData?.elements.reduce(
     // TODO: replace `any` with proper types
-    (acc: responseRoadsInteface, el: any) => {
+    (acc: ResponseRoads, el: any) => {
       if (!["way", "relation", "node"].includes(el.type)) return acc;
 
       const tags = el.tags || {};
@@ -27,7 +28,7 @@ export const responseRoads = (newData: responseRoadsData) =>
         tags.waterway ||
         "unclassified";
 
-      const updateBounds = (p: { lat: number; lon: number }) => {
+      const updateBounds = (p: Geolocation) => {
         if (p.lat < acc.bounds.minLat) acc.bounds.minLat = p.lat;
         if (p.lat > acc.bounds.maxLat) acc.bounds.maxLat = p.lat;
         if (p.lon < acc.bounds.minLon) acc.bounds.minLon = p.lon;
@@ -35,7 +36,7 @@ export const responseRoads = (newData: responseRoadsData) =>
       };
 
       const processGeometry = (
-        geometry: { lat: number; lon: number }[] | null,
+        geometry: Geolocation[] | null,
         type: string
       ) => {
         if (!geometry || geometry.length < 2) return null;
@@ -49,10 +50,7 @@ export const responseRoads = (newData: responseRoadsData) =>
         return {
           type: category,
           isClosed: isActuallyClosed,
-          coordinates: geometry.map((p: { lat: number; lon: number }) => [
-            p.lat,
-            p.lon
-          ])
+          coordinates: geometry.map((p: Geolocation) => [p.lat, p.lon])
         };
       };
 
@@ -113,7 +111,7 @@ export const responseRoads = (newData: responseRoadsData) =>
             if (road) acc.roads.push({ ...road, isClosed: true });
           }
         } else {
-          el.members.forEach((member: responseRoadsIntefaceMember) => {
+          el.members.forEach((member: ResponseRoadsMember) => {
             if (member.type === "way") {
               const road = processGeometry(member.geometry, category);
               if (road) acc.roads.push(road);

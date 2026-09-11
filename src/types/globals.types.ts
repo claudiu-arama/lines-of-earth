@@ -1,10 +1,12 @@
-export interface CityDataInterface {
+export interface CityData {
   display_name: string;
   type: string;
   lat: string;
   lon: string;
   areaId: number | null;
   boundingbox: string[];
+  name?: string;
+  country?: string;
 }
 
 type NominatimAddress = {
@@ -17,7 +19,7 @@ type NominatimAddress = {
   country_code?: string;
 };
 
-export interface nominatimResponseInterface {
+export interface NominatimResponseInterface {
   display_name: string;
   osm_type: string;
   osm_id: number | null;
@@ -26,16 +28,17 @@ export interface nominatimResponseInterface {
   lon: string;
   addresstype: string;
   address: NominatimAddress;
+  name: string | undefined;
 }
 
-export interface responseRoadsIntefaceMember {
+export interface ResponseRoadsMember {
   geometry: { lat: number; lon: number }[] | null;
   type: string;
   role: string;
   ref: number | null;
 }
 
-export interface responseRoadsInteface {
+export interface ResponseRoads {
   roads: {
     type: string;
     coordinates: number[][];
@@ -49,13 +52,13 @@ export interface responseRoadsInteface {
   };
 }
 
-export interface responseRoadsData {
+export interface ResponseRoadsData {
   elements: {
     type: string;
     id: number | null;
     tags: { [key: string]: string };
     geometry: { lat: number; lon: number }[] | null;
-    members?: responseRoadsIntefaceMember[];
+    members?: ResponseRoadsMember[];
     bounds?: {
       minLat: number;
       maxLat: number;
@@ -69,3 +72,14 @@ export type DrawScene = {
   drawScene: () => void;
   drawSceneFull: () => void;
 };
+
+export interface Geolocation {
+  lat: number;
+  lon: number;
+}
+
+export interface CanvasCoords {
+  x: number;
+  y: number;
+  scale: number;
+}

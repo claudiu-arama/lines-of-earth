@@ -1,4 +1,4 @@
-import type { nominatimResponseInterface } from "./globals";
+import type { NominatimResponseInterface } from "../types/globals.types";
 
 export const fetchCitySuggestions = async (inputQuery: string) => {
   if (!inputQuery) return;
@@ -9,10 +9,10 @@ export const fetchCitySuggestions = async (inputQuery: string) => {
   if (!response.ok)
     throw new Error("Cannot establish secure connection to server");
 
-  const data: nominatimResponseInterface[] = await response.json();
+  const data: NominatimResponseInterface[] = await response.json();
   if (data.length === 0) throw new Error("No cities found.");
 
-  return data.map((item: nominatimResponseInterface) => {
+  return data.map((item: NominatimResponseInterface) => {
     const id = item.osm_id;
     let areaId: number | null = null;
     if (id !== null) {
@@ -30,7 +30,9 @@ export const fetchCitySuggestions = async (inputQuery: string) => {
       boundingbox: item.boundingbox, // [minlat, maxlat, minlon, maxlon]
       lat: item.lat,
       lon: item.lon,
-      type: item.addresstype
+      type: item.addresstype,
+      name: item.name,
+      country: item.address.country
     };
   });
 };

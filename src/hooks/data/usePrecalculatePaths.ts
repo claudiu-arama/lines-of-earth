@@ -1,23 +1,22 @@
 import React, { useEffect } from "react";
 
 import { LAYER_MAPPING_SETS } from "constants/layerConfigs";
-import type { DrawScene, responseRoadsInteface } from "helpers/globals";
 import { projectCoordinateToMeters } from "helpers/locationHelpers";
 import { simplifyPath } from "helpers/mathHelpers";
 
-type Road = {
-  type: string;
-  coordinates: number[][];
-  isClosed: boolean;
-};
+import type {
+  CanvasCoords,
+  DrawScene,
+  ResponseRoads
+} from "../../types/globals.types";
 
 export function usePrecalculatePaths(
-  processedData: responseRoadsInteface | null,
+  processedData: ResponseRoads | null,
   containerRef: React.RefObject<HTMLDivElement | null>,
   setPathObjects: React.Dispatch<
     React.SetStateAction<Record<string, Path2D> | null>
   >,
-  transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
+  transformRef: React.RefObject<CanvasCoords>,
   drawScene: DrawScene,
   renderDurationRef: React.RefObject<number | null>
 ) {
@@ -56,7 +55,7 @@ export function usePrecalculatePaths(
       miscellaneous: new Path2D()
     };
 
-    roads.forEach((road: Road) => {
+    roads.forEach((road: ResponseRoads["roads"][0]) => {
       if (cancelled) return;
       const projectedPoints = road.coordinates.map((coord: number[]) =>
         projectCoordinateToMeters(coord[0], coord[1], centerLat, centerLon, 5)

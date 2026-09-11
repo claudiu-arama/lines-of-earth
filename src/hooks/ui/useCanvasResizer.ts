@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 
-import type { DrawScene } from "helpers/globals";
+import type { DrawScene } from "../../types/globals.types";
 
 export const useCanvasResizer = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>,

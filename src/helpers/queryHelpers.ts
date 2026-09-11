@@ -1,6 +1,6 @@
-import type { CityDataInterface } from "./globals";
+import type { CityData } from "../types/globals.types";
 
-export const getRoadsQuery = (city: CityDataInterface) => {
+export const getRoadsQuery = (city: CityData) => {
   if (!city) return "";
 
   const highways = `

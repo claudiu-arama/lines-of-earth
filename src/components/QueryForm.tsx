@@ -10,7 +10,6 @@ import { arrayofAPIs as api } from "constants/apis";
 import { MAP_PRESETS } from "constants/layerConfigs";
 import { BLURRED_PLACEHOLDER } from "constants/staticConstants";
 import { responseRoads } from "helpers/formatCityHelper";
-import type { CityDataInterface, DrawScene } from "helpers/globals";
 import { fetchCitySuggestions } from "helpers/nominatimService";
 import { usePrecalculatePaths } from "hooks/data/usePrecalculatePaths";
 import { useRoadsData } from "hooks/data/useRoadsData";
@@ -20,11 +19,13 @@ import { useCanvasResizer } from "hooks/ui/useCanvasResizer";
 import { useCenterCanvas } from "hooks/ui/useCenterCanvas";
 import { useDrawLogic } from "hooks/ui/useDrawLogic";
 
+import type { CanvasCoords, CityData, DrawScene } from "../types/globals.types";
+
 import { MapControls } from "./MapControls";
 
 import style from "./App.module.scss";
 
-const DEFAULT_LAYER = "ink-on-paper";
+const DEFAULT_LAYER = 0;
 
 export default function App() {
   // -- UI State --
@@ -33,7 +34,7 @@ export default function App() {
   // Dev note -> test if this is needed/enhancement or relic
   // cityHit: "",
   // countryHit: ""
-  const [queryCity, setQueryCity] = useState<CityDataInterface | null>(null);
+  const [queryCity, setQueryCity] = useState<CityData | null>(null);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [bgImageLoaded, setBgImageLoaded] = useState<boolean>(false);
   const [bgImageError, setBgImageError] = useState<boolean>(false);
@@ -62,7 +63,7 @@ export default function App() {
   const renderDurationRef = useRef<number | null>(null);
   const currentMirrorIndexRef = useRef<number>(0);
   // -- Camera & Interaction --
-  const transformRef = useRef<{ x: number; y: number; scale: number }>({
+  const transformRef = useRef<CanvasCoords>({
     x: 0,
     y: 0,
     scale: 1
@@ -75,7 +76,7 @@ export default function App() {
   const lastSizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const [layerColors, setLayerColors] = useState(
     Object.fromEntries(
-      Object.entries(MAP_PRESETS[DEFAULT_LAYER].config).map(([key, cfg]) => [
+      Object.entries(MAP_PRESETS[0].config).map(([key, cfg]) => [
         key,
         cfg.color
       ])
@@ -104,7 +105,7 @@ export default function App() {
     // isPending: isRoadsPending,
     error: isRoadErrorInfo
   } = useRoadsData(
-    queryCity as CityDataInterface,
+    queryCity as CityData,
     responseRoads as any,
     {
       enabled: !!queryCity,
@@ -120,7 +121,7 @@ export default function App() {
   const drawScene = useDrawLogic(
     canvasRef as React.RefObject<HTMLCanvasElement>,
     pathObjects as Record<string, Path2D> | null,
-    transformRef as React.RefObject<{ x: number; y: number; scale: number }>,
+    transformRef as React.RefObject<CanvasCoords>,
     visibleLayers as Record<string, boolean>,
     layerColors as Record<string, string>
   );
@@ -129,7 +130,7 @@ export default function App() {
   useCenterCanvas(
     canvasRef as React.RefObject<HTMLCanvasElement>,
     lastSizeRef as React.RefObject<{ w: number; h: number }>,
-    transformRef as React.RefObject<{ x: number; y: number; scale: number }>,
+    transformRef as React.RefObject<CanvasCoords>,
     drawScene,
     showFrame,
     frameOrientation
@@ -140,7 +141,7 @@ export default function App() {
     processedData,
     containerRef as React.RefObject<HTMLDivElement | null>,
     setPathObjects,
-    transformRef as React.RefObject<{ x: number; y: number; scale: number }>,
+    transformRef as React.RefObject<CanvasCoords>,
     drawScene as DrawScene,
     renderDurationRef as React.RefObject<number | null>
   );
@@ -151,7 +152,7 @@ export default function App() {
   // MARK: responsive canvas resizer
   useCanvasResizer(canvasRef, drawScene);
 
-  const handleCitySelect = (city: CityDataInterface) => {
+  const handleCitySelect = (city: CityData) => {
     setPathObjects(null);
     renderDurationRef.current = null;
     fetchDurationRef.current = null;

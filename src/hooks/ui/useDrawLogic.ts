@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import { LAYER_KEYS, MAP_PRESETS } from "constants/layerConfigs";
 import { SCALE_BASE } from "constants/staticConstants";
+
+import type { CanvasCoords } from "../../types/globals.types";
 type mapPresets = {
   [key: string]: {
     color: string;
@@ -13,17 +15,13 @@ type mapPresets = {
 export const useDrawLogic = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   pathObjects: Record<string, Path2D> | null,
-  transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
+  transformRef: React.RefObject<CanvasCoords>,
   visibleLayers: Record<string, boolean>,
   layerColors: Record<string, string>
 ) => {
   const ctxRef = useRef<CanvasRenderingContext2D>(null);
   const offscreenRef = useRef<OffscreenCanvas | null>(null);
-  const baseTransformRef = useRef<{
-    x: number;
-    y: number;
-    scale: number;
-  } | null>(null);
+  const baseTransformRef = useRef<CanvasCoords | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const latestPropsRef = useRef<any>({});
@@ -74,7 +72,7 @@ export const useDrawLogic = (
 
     const bgColor =
       currentColors["canvas"] ||
-      MAP_PRESETS["ink-on-paper"].config.canvas.color ||
+      MAP_PRESETS[0].config.canvas.color ||
       "#fbfffa";
 
     offCtx?.clearRect(0, 0, targetWidth, targetHeight);
@@ -96,8 +94,7 @@ export const useDrawLogic = (
       offCtx?.save();
       if (offCtx) {
         offCtx.fillStyle =
-          currentColors["water"] ||
-          MAP_PRESETS["ink-on-paper"].config.water.color;
+          currentColors["water"] || MAP_PRESETS[0].config.water.color;
         offCtx.globalAlpha = 1;
         offCtx.fill(currentPaths.waterFill, "nonzero");
         offCtx.restore();
@@ -109,7 +106,7 @@ export const useDrawLogic = (
     }
     for (let i = 0; i < LAYER_KEYS.length; i++) {
       const key = LAYER_KEYS[i];
-      const config = (MAP_PRESETS["ink-on-paper"].config as mapPresets)[key];
+      const config = (MAP_PRESETS[0].config as mapPresets)[key];
       if (!currentVisible[key] || scale <= config.minScale) continue;
       const path = currentPaths[key];
       if (!path) continue;
@@ -172,7 +169,7 @@ export const useDrawLogic = (
     const { layerColors: currentColors } = latestPropsRef.current;
     const bgColor =
       currentColors["canvas"] ||
-      MAP_PRESETS["ink-on-paper"].config.canvas.color ||
+      MAP_PRESETS[0].config.canvas.color ||
       "#fbfffa";
     if (ctx) {
       ctx.fillStyle = bgColor;

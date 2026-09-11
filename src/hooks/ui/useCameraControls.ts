@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import type { DrawScene } from "helpers/globals";
+import type { CanvasCoords, DrawScene } from "../../types/globals.types";
 
 import { debounce } from "./../../helpers/utilities";
 
@@ -28,7 +28,7 @@ interface CameraState {
 
 export const useCameraControls = (
   canvasRef: React.RefObject<HTMLCanvasElement>,
-  transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
+  transformRef: React.RefObject<CanvasCoords>,
   drawScene: DrawScene
 ) => {
   const drawSceneRef = useRef(drawScene.drawScene);
@@ -124,20 +124,20 @@ export const useCameraControls = (
       scheduleFrame(false);
     };
 
-    const queueZoom = (zoomConfig: {
-      factor: number;
-      centerX: number;
-      centerY: number;
-      panX: number;
-      panY: number;
-    }) => {
+    const queueZoom = (zoomConfig: CameraState["pendingZoom"]) => {
       if (state.pendingZoom) {
         state.pendingZoom = {
-          factor: state.pendingZoom.factor * zoomConfig.factor,
-          x: zoomConfig.centerX,
-          y: zoomConfig.centerY,
-          panX: state.pendingZoom.panX + zoomConfig.panX,
-          panY: state.pendingZoom.panY + zoomConfig.panY
+          factor:
+            state.pendingZoom.factor *
+            (zoomConfig && zoomConfig.factor ? zoomConfig.factor : 1),
+          x: zoomConfig && zoomConfig.x ? zoomConfig.x : 0,
+          y: zoomConfig && zoomConfig.y ? zoomConfig.y : 0,
+          panX:
+            state.pendingZoom.panX +
+            (zoomConfig && zoomConfig.panX ? zoomConfig.panX : 0),
+          panY:
+            state.pendingZoom.panY +
+            (zoomConfig && zoomConfig.panY ? zoomConfig.panY : 0)
         };
       } else {
         state.pendingZoom = {
