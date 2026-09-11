@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 
-import type { CanvasCoords, DrawScene } from "../../types/globals.types";
+import type {
+  CanvasCoords,
+  DrawScene,
+  Position
+} from "../../types/globals.types";
 
 import { debounce } from "./../../helpers/utilities";
 
@@ -19,9 +23,9 @@ interface CameraState {
     panX: number;
     panY: number;
   } | null;
-  pointers: Map<number, { x: number; y: number }>;
+  pointers: Map<number, Position>;
   lastPinchDist: number;
-  lastPinchMid: { x: number; y: number };
+  lastPinchMid: Position;
   canvasRect: DOMRect | null;
   needsFullDraw: boolean;
 }
@@ -170,9 +174,7 @@ export const useCameraControls = (
         state.isPinchZooming = true;
 
         // TODO: replace `any` with proper types
-        const pts: { x: number; y: number }[] = Array.from(
-          state.pointers.values()
-        );
+        const pts: Position[] = Array.from(state.pointers.values());
         state.lastPinchDist = Math.hypot(
           pts[1].x - pts[0].x,
           pts[1].y - pts[0].y
@@ -192,9 +194,7 @@ export const useCameraControls = (
         panTo(e.clientX, e.clientY);
         debouncedFullDraw();
       } else if (state.pointers.size === 2 && state.isPinchZooming) {
-        const pts: { x: number; y: number }[] = Array.from(
-          state.pointers.values()
-        );
+        const pts: Position[] = Array.from(state.pointers.values());
         const curDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
         const curMidX = (pts[0].x + pts[1].x) / 2;
         const curMidY = (pts[0].y + pts[1].y) / 2;
@@ -206,7 +206,7 @@ export const useCameraControls = (
           const panX = curMidX - state.lastPinchMid.x;
           const panY = curMidY - state.lastPinchMid.y;
 
-          queueZoom({ factor, centerX, centerY, panX, panY });
+          queueZoom({ factor, x: centerX, y: centerY, panX, panY });
         }
 
         state.lastPinchDist = curDist;

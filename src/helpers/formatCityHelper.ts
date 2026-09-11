@@ -1,7 +1,7 @@
 import { ENCLOSED_WATER_TYPES, EXCLUDED_TYPES } from "constants/layerConfigs";
 
 import type {
-  Geolocation,
+  GeoCoordinates,
   ResponseRoads,
   ResponseRoadsData,
   ResponseRoadsMember
@@ -28,7 +28,7 @@ export const responseRoads = (newData: ResponseRoadsData) =>
         tags.waterway ||
         "unclassified";
 
-      const updateBounds = (p: Geolocation) => {
+      const updateBounds = (p: GeoCoordinates) => {
         if (p.lat < acc.bounds.minLat) acc.bounds.minLat = p.lat;
         if (p.lat > acc.bounds.maxLat) acc.bounds.maxLat = p.lat;
         if (p.lon < acc.bounds.minLon) acc.bounds.minLon = p.lon;
@@ -36,7 +36,7 @@ export const responseRoads = (newData: ResponseRoadsData) =>
       };
 
       const processGeometry = (
-        geometry: Geolocation[] | null,
+        geometry: GeoCoordinates[] | null,
         type: string
       ) => {
         if (!geometry || geometry.length < 2) return null;
@@ -50,7 +50,7 @@ export const responseRoads = (newData: ResponseRoadsData) =>
         return {
           type: category,
           isClosed: isActuallyClosed,
-          coordinates: geometry.map((p: Geolocation) => [p.lat, p.lon])
+          coordinates: geometry.map((p: GeoCoordinates) => [p.lat, p.lon])
         };
       };
 

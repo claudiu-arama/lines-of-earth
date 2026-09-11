@@ -73,9 +73,14 @@ export type DrawScene = {
   drawSceneFull: () => void;
 };
 
-export interface Geolocation {
+export interface GeoCoordinates {
   lat: number;
   lon: number;
+}
+
+export interface Position {
+  x: number;
+  y: number;
 }
 
 export interface CanvasCoords {
