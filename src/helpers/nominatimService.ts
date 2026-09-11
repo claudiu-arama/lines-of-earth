@@ -1,4 +1,4 @@
-import type { NominatimResponseInterface } from "../types/globals.types";
+import type { NominatimResponseData } from "../types/globals.types";
 
 export const fetchCitySuggestions = async (inputQuery: string) => {
   if (!inputQuery) return;
@@ -9,10 +9,10 @@ export const fetchCitySuggestions = async (inputQuery: string) => {
   if (!response.ok)
     throw new Error("Cannot establish secure connection to server");
 
-  const data: NominatimResponseInterface[] = await response.json();
+  const data: NominatimResponseData[] = await response.json();
   if (data.length === 0) throw new Error("No cities found.");
 
-  return data.map((item: NominatimResponseInterface) => {
+  return data.map((item: NominatimResponseData) => {
     const id = item.osm_id;
     let areaId: number | null = null;
     if (id !== null) {

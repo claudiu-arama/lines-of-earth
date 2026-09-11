@@ -19,7 +19,7 @@ type NominatimAddress = {
   country_code?: string;
 };
 
-export interface NominatimResponseInterface {
+export interface NominatimResponseData {
   display_name: string;
   osm_type: string;
   osm_id: number | null;
