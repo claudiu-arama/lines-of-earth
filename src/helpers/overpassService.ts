@@ -1,30 +1,34 @@
+import type { QueryClient } from "@tanstack/react-query";
+
 import { FETCH_TIMEOUT_MS } from "constants/staticConstants";
 
-// TODO: replace `any` with proper types
+import type { CityDataInterface } from "./globals";
+
 export const recursiveFetch = async (
-  urlArray: any,
-  query: any,
+  urlArray: string[],
+  query: string,
   index = 0,
-  lastError: any = null,
-  setCurrentMirrorIndex: any,
-  signal: any,
-  start: any,
-  setFetchDuration: any,
-  queryClient: any,
-  queryCity: any
-): Promise<any> => {
+  lastError: Error | null = null,
+  currentMirrorIndexRef: React.RefObject<number>,
+  signal: AbortSignal,
+  start: number,
+  fetchDurationRef: React.RefObject<number | null>,
+  queryClient: QueryClient,
+  queryCity: CityDataInterface
+): Promise<unknown> => {
   if (index >= urlArray.length) {
     throw lastError || new Error("All servers failed");
   }
   const timeoutSignal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
   const combinedSignal = AbortSignal.any([signal, timeoutSignal]);
   try {
-    setCurrentMirrorIndex(index);
+    currentMirrorIndexRef.current = index;
     const response = await fetch(urlArray[index], {
       method: "POST",
       body: "data=" + encodeURIComponent(query),
       headers: {
-        "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+        "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Access-Control-Allow-Origin": "*"
       },
       signal: combinedSignal
     });
@@ -35,12 +39,12 @@ export const recursiveFetch = async (
     if (!data.elements || data.elements.length === 0) {
       throw new Error(`Mirror ${index + 1} returned empty data`);
     }
-    const end = (performance.now() - start).toFixed(2);
-    setFetchDuration(end);
+    const end = Math.round((performance.now() - start) * 100) / 100;
+    fetchDurationRef.current = end;
     return data;
   } catch (error) {
-    // TODO: replace `any` with proper types
-    if ((error as any).name === "AbortError" && signal.aborted) throw error;
+    if ((error as Error | null)?.name === "AbortError" && signal.aborted)
+      throw error;
     if (index + 1 >= urlArray.length) {
       queryClient.removeQueries({ queryKey: ["roads", queryCity.areaId] });
       throw new Error("All servers failed");
@@ -49,11 +53,11 @@ export const recursiveFetch = async (
       urlArray,
       query,
       index + 1,
-      error,
-      setCurrentMirrorIndex,
+      error as Error | null,
+      currentMirrorIndexRef,
       signal,
       start,
-      setFetchDuration,
+      fetchDurationRef,
       queryClient,
       queryCity
     );

@@ -5,16 +5,14 @@ import { useClickOutside } from "hooks/helpers/useClickOutside";
 
 import style from "./ColorPicker.module.scss";
 
-// TODO: replace `any` with proper types
-export function ColorPicker({
-  value,
-  onChange
-}: {
-  value: any;
-  onChange: any;
-}) {
+interface ColorPickerProps {
+  value: string;
+  onChange: (color: string) => void;
+}
+
+export function ColorPicker({ value, onChange }: ColorPickerProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   useClickOutside(ref, open, () => setOpen(false));
 

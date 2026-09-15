@@ -1,7 +1,11 @@
 import { useLayoutEffect } from "react";
 
-// TODO: replace `any` with proper types
-export const useCanvasResizer = (canvasRef: any, drawScene: any) => {
+import type { DrawScene } from "../../types/globals.types";
+
+export const useCanvasResizer = (
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  drawScene: DrawScene
+) => {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -19,8 +23,6 @@ export const useCanvasResizer = (canvasRef: any, drawScene: any) => {
         return;
       }
 
-      canvas.width = currentLayoutW * dpr;
-      canvas.height = currentLayoutH * dpr;
       drawScene.drawSceneFull();
     };
 
@@ -30,5 +32,5 @@ export const useCanvasResizer = (canvasRef: any, drawScene: any) => {
     update();
 
     return () => observer.disconnect();
-  }, [drawScene]);
+  }, []);
 };

@@ -1,15 +1,18 @@
 import { useCallback, useEffect } from "react";
 
-// TODO: replace `any` with proper types
-export const useClickOutside = (ref: any, isOpen: any, callback: any) => {
+export const useClickOutside = (
+  ref: React.RefObject<HTMLDivElement> | null,
+  isOpen: boolean,
+  callback: () => void
+) => {
   const handleClickOutside = useCallback(
-    (event: any) => {
-      if (ref.current && !ref.current.contains(event.target)) {
+    (event: MouseEvent) => {
+      if (ref && ref.current && !ref.current.contains(event.target as Node)) {
         callback();
       }
     },
     [callback]
-  );
+  ) as EventListener;
   useEffect(() => {
     if (!isOpen) return;
     document.addEventListener("mousedown", handleClickOutside);

@@ -5,11 +5,13 @@ import { CityLabel } from "./CityLabel";
 import styles from "./MapViewport.module.scss";
 
 // TODO: replace `any` with proper types
+//TODO: refactor and use Context API to avoid prop drilling
+
 export function MapViewport({
   canvasRef,
   mapViewportRef,
   isRoadFetching,
-  currentMirrorIndex,
+  currentMirrorIndexRef,
   onCancelFetch,
   pathObjects,
   showFrame,
@@ -27,9 +29,9 @@ export function MapViewport({
   canvasRef: any;
   mapViewportRef: any;
   isRoadFetching: any;
-  currentMirrorIndex: any;
+  currentMirrorIndexRef: React.RefObject<number>;
   onCancelFetch: any;
-  pathObjects: any;
+  pathObjects: Record<string, Path2D> | null;
   showFrame: any;
   frameOrientation: any;
   bgImageLoaded: any;
@@ -118,10 +120,9 @@ export function MapViewport({
             <h2 className={styles.loadingTitle}>Building City Network</h2>
             <p className={styles.loadingSubtitle}>
               {isRoadError}
-              Getting data from server <strong>
-                {currentMirrorIndex + 1}
-              </strong>{" "}
-              of {apiLength}
+              Getting data from server{" "}
+              <strong>{currentMirrorIndexRef.current + 1}</strong> of{" "}
+              {apiLength}
             </p>
             <button className={styles.cancelButton} onClick={onCancelFetch}>
               Cancel

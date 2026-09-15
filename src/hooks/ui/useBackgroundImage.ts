@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 
-// TODO: replace `any` with proper types
 export const useBackgroundImage = (
-  bgImageRef: any,
-  setBgImageLoaded: any,
-  placeholderImg: any,
-  fallbackImg: any
+  bgImageRef: React.RefObject<HTMLImageElement | null>,
+  setBgImageLoaded: (loaded: boolean) => void,
+  placeholderImg: string,
+  fallbackImg: string
 ) => {
   useEffect(() => {
     // Create an image element to preload the background
