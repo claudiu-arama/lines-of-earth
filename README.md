@@ -72,6 +72,78 @@ pnpm run dev
 
 Then open the printed `localhost` URL.
 
+## Running the backend (server + Redis)
+
+The app is being migrated to route its Nominatim/Overpass calls through a proxy server (`server/`) instead of calling those public APIs directly from the browser. If you're working on the frontend and just need the API running locally — not developing the server itself — this is the fastest path.
+
+The server depends on **Redis** (used for Overpass mirror health-tracking and latency-based routing), so it isn't enough to just run the server on its own — Redis needs to be reachable too.
+
+### Option A — Docker Compose (recommended)
+
+This starts both the server and Redis together, with no local Node/pnpm setup required for the backend.
+
+**Prerequisite:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+From the repo root:
+
+```bash
+docker compose up
+```
+
+First run will build the server's image (installs its dependencies inside the container), which takes a minute or two. Subsequent runs start instantly. Your local `server/` folder is mounted into the container, so editing server code on your machine takes effect immediately (no rebuild needed) — the container runs `pnpm dev` under the hood.
+
+To run it in the background instead of tying up a terminal:
+
+```bash
+docker compose up -d
+```
+
+**Verify it's up:**
+
+```bash
+curl http://localhost:3000/health
+# → OK
+```
+
+**View logs** (useful if something looks wrong):
+
+```bash
+docker compose logs -f server
+```
+
+**Stop everything:**
+
+```bash
+docker compose down
+```
+
+### Option B — Run the server directly on your machine
+
+Only needed if you specifically want to run the server outside Docker. You still need Redis reachable somewhere — the simplest way is to start just the Redis container from the same Compose file and run the server yourself:
+
+```bash
+docker compose up redis      # Redis only, in the background
+cd server
+pnpm install                 # first time only
+pnpm dev
+```
+
+The server reads `REDIS_URL` from the environment, falling back to `redis://localhost:6379` if unset — which matches the port Docker Compose exposes, so no extra configuration is needed.
+
+### What's available once it's running
+
+| Endpoint                                                                                               | Purpose                                                                                                   |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `GET /health`                                                                                          | Liveness check                                                                                            |
+| `GET /api/cities/search?q=<query>`                                                                     | Geocode a free-text query into city matches                                                               |
+| `GET /api/roads?osm_id=<id>&osm_type=<node\|way\|relation>&bounding_box=<minLat,maxLat,minLon,maxLon>` | Fetch road/landmark/waterway geometry for a city (`bounding_box` only required when `osm_type` is `node`) |
+
+### Troubleshooting
+
+- **Port already in use (3000 or 6379):** something else on your machine is bound to that port — stop it, or check `docker compose ps` for a stale container from a previous run.
+- **`/api/roads` returns `502 OVERPASS_UNAVAILABLE`:** the public Overpass mirrors the server proxies to are shared, free infrastructure and occasionally rate-limit or slow down under load — this isn't necessarily a bug. Wait a bit and retry; `/api/cities/search` failing the same way is a stronger signal something's actually broken, since Nominatim is a separate, generally more available service.
+- **Changes to server code aren't reflected:** confirm you're running via `docker compose up` (which mounts `server/` live) rather than a stale built image — `docker compose up --build` forces a rebuild if needed.
+
 ## Scripts
 
 | Script               | What it does                                                           |

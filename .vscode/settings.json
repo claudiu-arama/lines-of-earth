@@ -4,6 +4,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "eslint.workingDirectories": [{ "mode": "auto" }],
   "editor.tokenColorCustomizations": {
     "comments": "#28db79"
   },

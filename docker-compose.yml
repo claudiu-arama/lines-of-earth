@@ -1,0 +1,22 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  server:
+    build:
+      context: .
+      dockerfile: server/devops/docker/Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      REDIS_URL: "redis://redis:6379"
+    volumes:
+      - ./server:/app/server
+      - server_node_modules:/app/server/node_modules
+    depends_on:
+      - redis
+
+volumes:
+  server_node_modules:
