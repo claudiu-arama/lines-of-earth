@@ -45,6 +45,7 @@ const ScaleBarBottom = () => (
 );
 
 // TODO: replace `any` with proper types
+//TODO: refactor and use Context API to avoid prop drilling
 export function MapControls({
   pathObjects,
   processedData,
@@ -56,23 +57,23 @@ export function MapControls({
   isRoadError,
   isRoadErrorInfo,
   isRoadFetching,
-  cityData,
-  handleCitySelect,
-  renderDuration,
-  fetchDuration,
+  cityData, // passed to CityHits component
+  handleCitySelect, // passed to CityHits component
+  renderDurationRef,
+  fetchDurationRef,
   visibleLayers,
   setVisibleLayers,
   showFrame,
   setShowFrame,
   frameOrientation,
   setFrameOrientation,
-  setQueryCity,
-  setPathObjects,
-  setInputValue,
-  canvasRef,
-  transformRef,
-  queryCity,
-  setLayerColors,
+  setQueryCity, // used for clearing the map when clicking "Clear map" button
+  setPathObjects, // used for clearing the map when clicking "Clear map" button
+  setInputValue, // used for clearing the map when clicking "Clear map" button
+  canvasRef, // sent to exportToSVG function for exporting the map as SVG
+  transformRef, // sent to exportToSVG function for exporting the map as SVG
+  queryCity, // sent to exportToSVG function for exporting the map as SVG
+  setLayerColors, // used for updating the color of each layer when changed in the ColorPicker component
   layerColors
 }: {
   pathObjects: any;
@@ -87,8 +88,8 @@ export function MapControls({
   isRoadFetching: any;
   cityData: any;
   handleCitySelect: any;
-  renderDuration: any;
-  fetchDuration: any;
+  renderDurationRef: any;
+  fetchDurationRef: any;
   visibleLayers: any;
   setVisibleLayers: any;
   showFrame: any;
@@ -179,7 +180,7 @@ export function MapControls({
                     <ColorPicker
                       value={layerColors[layer]}
                       // TODO: replace `any` with proper types
-                      onChange={(color: any) =>
+                      onChange={(color: string) =>
                         setLayerColors((prev: any) => ({
                           ...prev,
                           [layer]: color
@@ -258,15 +259,19 @@ export function MapControls({
                   {processedData?.roads.length.toLocaleString()}
                 </span>
               </div>
-              {renderDuration && (
+              {renderDurationRef.current !== null && (
                 <div className={style.statRow}>
                   <span className={style.statLabel}>Render time</span>
-                  <span className={style.statValue}>{renderDuration} ms</span>
+                  <span className={style.statValue}>
+                    {renderDurationRef.current} ms
+                  </span>
                 </div>
               )}
               <div className={style.statRow}>
                 <span className={style.statLabel}>Network</span>
-                <span className={style.statValue}>{fetchDuration} ms</span>
+                <span className={style.statValue}>
+                  {fetchDurationRef.current} ms
+                </span>
               </div>
             </div>
           </div>

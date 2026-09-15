@@ -1,3 +1,5 @@
+import type { NominatimResponseData } from "../types/globals.types";
+
 export const fetchCitySuggestions = async (inputQuery: string) => {
   if (!inputQuery) return;
 
@@ -7,18 +9,18 @@ export const fetchCitySuggestions = async (inputQuery: string) => {
   if (!response.ok)
     throw new Error("Cannot establish secure connection to server");
 
-  const data = await response.json();
+  const data: NominatimResponseData[] = await response.json();
   if (data.length === 0) throw new Error("No cities found.");
 
-  // TODO: replace `any` with proper types
-  return data.map((item: any) => {
-    const id = parseInt(item.osm_id, 10);
+  return data.map((item: NominatimResponseData) => {
+    const id = item.osm_id;
     let areaId: number | null = null;
-
-    if (item.osm_type === "relation") {
-      areaId = id + 3600000000;
-    } else if (item.osm_type === "way") {
-      areaId = id + 2400000000;
+    if (id !== null) {
+      if (item.osm_type === "relation") {
+        areaId = id + 3600000000;
+      } else if (item.osm_type === "way") {
+        areaId = id + 2400000000;
+      }
     }
     // node → areaId stays null, bbox fallback will be used
 
@@ -28,7 +30,9 @@ export const fetchCitySuggestions = async (inputQuery: string) => {
       boundingbox: item.boundingbox, // [minlat, maxlat, minlon, maxlon]
       lat: item.lat,
       lon: item.lon,
-      type: item.addresstype
+      type: item.addresstype,
+      name: item.name,
+      country: item.address.country
     };
   });
 };

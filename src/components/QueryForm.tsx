@@ -1,6 +1,7 @@
+import { useEffect, useRef, useState } from "react";
+import type { QueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
 
 import fallbackImg from "assets/fallback.png";
 import placeholderImg from "assets/placeholder.webp";
@@ -18,29 +19,33 @@ import { useCanvasResizer } from "hooks/ui/useCanvasResizer";
 import { useCenterCanvas } from "hooks/ui/useCenterCanvas";
 import { useDrawLogic } from "hooks/ui/useDrawLogic";
 
+import type { CanvasCoords, CityData, DrawScene } from "../types/globals.types";
+
 import { MapControls } from "./MapControls";
 
 import style from "./App.module.scss";
 
-const DEFAULT_LAYER = "ink-on-paper";
+const DEFAULT_LAYER = 0;
 
 export default function App() {
   // -- UI State --
-  const [inputValue, setInputValue] = useState("");
-  const [inputQuery, setInputQuery] = useState({
-    cityHit: "",
-    countryHit: ""
-  });
-  const [queryCity, setQueryCity] = useState(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [bgImageLoaded, setBgImageLoaded] = useState(false);
-  const [bgImageError, setBgImageError] = useState(false);
-  const [showFrame, setShowFrame] = useState(true);
-  const [frameOrientation, setFrameOrientation] = useState("portrait");
-  const [layerScheme, setLayerScheme] = useState(MAP_PRESETS[DEFAULT_LAYER]);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [inputQuery, setInputQuery] = useState<string>("");
+  // Dev note -> test if this is needed/enhancement or relic
+  // cityHit: "",
+  // countryHit: ""
+  const [queryCity, setQueryCity] = useState<CityData | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [bgImageLoaded, setBgImageLoaded] = useState<boolean>(false);
+  const [bgImageError, setBgImageError] = useState<boolean>(false);
+  const [showFrame, setShowFrame] = useState<boolean>(true);
+  const [frameOrientation, setFrameOrientation] = useState<string>("portrait");
+  // const [layerScheme, setLayerScheme] = useState(MAP_PRESETS[DEFAULT_LAYER]);
   // -- Data State --
-  const [pathObjects, setPathObjects] = useState(null); // The cached Path2D objects
-  const [visibleLayers, setVisibleLayers] = useState({
+  const [pathObjects, setPathObjects] = useState<Record<string, Path2D> | null>(
+    null
+  ); // The cached Path2D objects
+  const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({
     water: true,
     express: true,
     arterial: true,
@@ -54,24 +59,24 @@ export default function App() {
     canvas: true
   });
   // -- Performance Data --
-  const [fetchDuration, setFetchDuration] = useState(null);
-  const [renderDuration, setRenderDuration] = useState(null);
-  const [currentMirrorIndex, setCurrentMirrorIndex] = useState(0);
+  const fetchDurationRef = useRef<number | null>(null);
+  const renderDurationRef = useRef<number | null>(null);
+  const currentMirrorIndexRef = useRef<number>(0);
   // -- Camera & Interaction --
-  const drawSceneRef = useRef(null);
-  const transformRef = useRef({ x: 0, y: 0, scale: 1 });
-  const canvasRef = useRef(null);
-  const containerRef = useRef(null);
-  const mapViewportRef = useRef(null);
-  const bgImageRef = useRef(null);
+  const transformRef = useRef<CanvasCoords>({
+    x: 0,
+    y: 0,
+    scale: 1
+  });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapViewportRef = useRef<HTMLDivElement | null>(null);
+  const bgImageRef = useRef<HTMLImageElement | null>(null);
   const queryClient = useQueryClient();
-  //debug
-  // TODO: replace `any` with proper types
-  (window as any).__qc = queryClient;
-  const lastSizeRef = useRef({ w: 0, h: 0 });
+  const lastSizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const [layerColors, setLayerColors] = useState(
     Object.fromEntries(
-      Object.entries(MAP_PRESETS[DEFAULT_LAYER].config).map(([key, cfg]) => [
+      Object.entries(MAP_PRESETS[0].config).map(([key, cfg]) => [
         key,
         cfg.color
       ])
@@ -97,35 +102,35 @@ export default function App() {
     isError: isRoadError,
     isFetching: isRoadFetching,
     isSuccess: isRoadsSuccess,
-    isPending: isRoadsPending,
+    // isPending: isRoadsPending,
     error: isRoadErrorInfo
   } = useRoadsData(
-    queryCity,
-    responseRoads,
+    queryCity as CityData,
+    responseRoads as any,
     {
       enabled: !!queryCity,
       staleTime: 1000 * 60 * 3,
       gcTime: 1000 * 60 * 3
     },
-    setCurrentMirrorIndex,
-    setFetchDuration,
-    queryClient
+    currentMirrorIndexRef,
+    fetchDurationRef as React.RefObject<number | null>,
+    queryClient as QueryClient
   );
 
   // MARK: Draw/Render Logic
   const drawScene = useDrawLogic(
-    canvasRef,
-    pathObjects,
-    transformRef,
-    visibleLayers,
-    layerColors
+    canvasRef as React.RefObject<HTMLCanvasElement>,
+    pathObjects as Record<string, Path2D> | null,
+    transformRef as React.RefObject<CanvasCoords>,
+    visibleLayers as Record<string, boolean>,
+    layerColors as Record<string, string>
   );
 
   //MARK: keep map center
   useCenterCanvas(
-    canvasRef,
-    lastSizeRef,
-    transformRef,
+    canvasRef as React.RefObject<HTMLCanvasElement>,
+    lastSizeRef as React.RefObject<{ w: number; h: number }>,
+    transformRef as React.RefObject<CanvasCoords>,
     drawScene,
     showFrame,
     frameOrientation
@@ -134,11 +139,11 @@ export default function App() {
   //MARK: precalculated paths
   usePrecalculatePaths(
     processedData,
-    containerRef,
+    containerRef as React.RefObject<HTMLDivElement | null>,
     setPathObjects,
-    transformRef,
-    drawScene,
-    setRenderDuration
+    transformRef as React.RefObject<CanvasCoords>,
+    drawScene as DrawScene,
+    renderDurationRef as React.RefObject<number | null>
   );
 
   // MARK: Camera Control
@@ -147,24 +152,21 @@ export default function App() {
   // MARK: responsive canvas resizer
   useCanvasResizer(canvasRef, drawScene);
 
-  // TODO: replace `any` with proper types
-  const handleCitySelect = (city: any) => {
+  const handleCitySelect = (city: CityData) => {
     setPathObjects(null);
-    setRenderDuration(null);
-    setFetchDuration(null);
+    renderDurationRef.current = null;
+    fetchDurationRef.current = null;
     setQueryCity(city);
   };
 
-  // TODO: replace `any` with proper types
-  const handleOnChange = (e: any) => {
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setPathObjects(null);
-      // TODO: replace `any` with proper types
-      setInputQuery(inputValue as any);
+      setInputQuery(inputValue as string);
     }, 500);
     return () => clearTimeout(timer);
   }, [inputValue]);
@@ -177,9 +179,8 @@ export default function App() {
     error
   } = useQuery({
     queryKey: ["cityQuery", inputQuery],
-    // TODO: replace `any` with proper types
-    queryFn: () => fetchCitySuggestions(inputQuery as any),
-    enabled: (inputQuery as any).length > 2,
+    queryFn: () => fetchCitySuggestions(inputQuery as string),
+    enabled: (inputQuery as string).length > 2,
     retry: false,
     staleTime: 1000 * 60 * 5
   });
@@ -192,8 +193,8 @@ export default function App() {
           setIsCollapsed={setIsCollapsed}
           pathObjects={pathObjects}
           processedData={processedData}
-          renderDuration={renderDuration}
-          fetchDuration={fetchDuration}
+          renderDurationRef={renderDurationRef}
+          fetchDurationRef={fetchDurationRef}
           canvasRef={canvasRef}
           showFrame={showFrame}
           transformRef={transformRef}
@@ -225,7 +226,7 @@ export default function App() {
         isRoadFetching={isRoadFetching}
         isRoadsSuccess={isRoadsSuccess}
         isRoadError={isRoadError}
-        currentMirrorIndex={currentMirrorIndex}
+        currentMirrorIndexRef={currentMirrorIndexRef}
         apiLength={api.length}
         cityData={cityData}
         onCancelFetch={() => {

@@ -1,25 +1,24 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 import { LAYER_MAPPING_SETS } from "constants/layerConfigs";
 import { projectCoordinateToMeters } from "helpers/locationHelpers";
 import { simplifyPath } from "helpers/mathHelpers";
 
-//debug
-const pathLayerRegistry = new FinalizationRegistry((label) => {
-  console.log(
-    `%c[GC] pathLayers for "${label}" was collected`,
-    "color: green; font-weight: bold"
-  );
-});
+import type {
+  CanvasCoords,
+  DrawScene,
+  ResponseRoads
+} from "../../types/globals.types";
 
-// TODO: replace `any` with proper types
 export function usePrecalculatePaths(
-  processedData: any,
-  containerRef: any,
-  setPathObjects: any,
-  transformRef: any,
-  drawScene: any,
-  setRenderDuration: any
+  processedData: ResponseRoads | null,
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  setPathObjects: React.Dispatch<
+    React.SetStateAction<Record<string, Path2D> | null>
+  >,
+  transformRef: React.RefObject<CanvasCoords>,
+  drawScene: DrawScene,
+  renderDurationRef: React.RefObject<number | null>
 ) {
   useEffect(() => {
     if (!processedData) {
@@ -29,7 +28,10 @@ export function usePrecalculatePaths(
     let cancelled = false;
     const startTime = performance.now();
     const { roads, bounds } = processedData;
-    const { clientWidth: width } = containerRef.current;
+    const { clientWidth: width } =
+      containerRef && containerRef.current
+        ? containerRef.current
+        : { clientWidth: 0 };
 
     const maxSpanLong = bounds.maxLat - bounds.minLat;
     const maxSpanLat = bounds.maxLon - bounds.minLon;
@@ -53,11 +55,10 @@ export function usePrecalculatePaths(
       miscellaneous: new Path2D()
     };
 
-    // TODO: replace `any` with proper types
-    roads.forEach((road: any) => {
+    roads.forEach((road: ResponseRoads["roads"][0]) => {
       if (cancelled) return;
-      const projectedPoints = road.coordinates.map((p: any) =>
-        projectCoordinateToMeters(p[0], p[1], centerLat, centerLon, 5)
+      const projectedPoints = road.coordinates.map((coord: number[]) =>
+        projectCoordinateToMeters(coord[0], coord[1], centerLat, centerLon, 5)
       );
       const simplified = simplifyPath(projectedPoints, 2.0);
       if (simplified.length < 2) return;
@@ -103,13 +104,8 @@ export function usePrecalculatePaths(
 
     if (!cancelled) {
       setPathObjects(pathLayers);
-      setRenderDuration((performance.now() - startTime).toFixed(2));
-      //debug
-      const label = `city-${Date.now()}`;
-      // TODO: replace `any` with proper types
-      (window as any).__cityRefs = (window as any).__cityRefs || {};
-      (window as any).__cityRefs[label] = new WeakRef(pathLayers);
-      console.log(`Registered pathLayers as "${label}"`);
+      renderDurationRef.current =
+        Math.round((performance.now() - startTime) * 100) / 100;
       if (containerRef.current) {
         const cx = containerRef.current.clientWidth / 2;
         const cy = containerRef.current.clientHeight / 2;
