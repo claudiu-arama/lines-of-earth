@@ -9,6 +9,19 @@ interface CityLabelProps {
   accentColor?: string;
   fontColor?: string;
   variant?: StyleVariant;
+  labelSettings: {
+    showCountryName: {
+      enabled: boolean;
+    };
+    tagline: {
+      enabled: boolean;
+      text: string;
+    };
+    footnote: {
+      enabled: boolean;
+      text: string;
+    };
+  };
 }
 
 type CSSVariable = React.CSSProperties & {
@@ -29,13 +42,14 @@ const STYLES: Record<StyleVariant, React.CSSProperties> = {
 };
 
 export const CityLabel = ({
-  cityName = "London",
+  cityName,
   country = "United Kingdom",
   message = "",
   variant = "fade",
   bgColor = "#f5f0e8",
   accentColor = "#1a1a1a",
-  fontColor = "#1a1a1a"
+  fontColor = "#1a1a1a",
+  labelSettings
 }: CityLabelProps) => {
   return (
     <div
@@ -51,8 +65,15 @@ export const CityLabel = ({
     >
       <div className={styles.inner}>
         <h1 className={styles.city}>{cityName}</h1>
-        <p className={styles.country}>{country}</p>
-        {message && <p className={styles.message}>{message}</p>}
+        {labelSettings.showCountryName.enabled && (
+          <p className={styles.country}>{country}</p>
+        )}
+        {labelSettings.tagline.enabled && message && (
+          <p className={styles.message}>{labelSettings.tagline.text}</p>
+        )}
+        {labelSettings.footnote.enabled && (
+          <p className={styles.message}>{labelSettings.footnote.text}</p>
+        )}
       </div>
     </div>
   );

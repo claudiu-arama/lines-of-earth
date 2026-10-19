@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import type { QueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 
 import fallbackImg from "assets/fallback.png";
 import placeholderImg from "assets/placeholder.webp";
 import { MapViewport } from "components/MapViewport";
 import { arrayofAPIs as api } from "constants/apis";
-import { MAP_PRESETS } from "constants/layerConfigs";
+import { MAP_PRESETS, STYLE_OPTIONS } from "constants/layerConfigs";
 import { BLURRED_PLACEHOLDER } from "constants/staticConstants";
 import { responseRoads } from "helpers/formatCityHelper";
+import { formatLatLon } from "helpers/mathHelpers";
 import { fetchCitySuggestions } from "helpers/nominatimService";
 import { usePrecalculatePaths } from "hooks/data/usePrecalculatePaths";
 import { useRoadsData } from "hooks/data/useRoadsData";
@@ -19,11 +19,13 @@ import { useCanvasResizer } from "hooks/ui/useCanvasResizer";
 import { useCenterCanvas } from "hooks/ui/useCenterCanvas";
 import { useDrawLogic } from "hooks/ui/useDrawLogic";
 
-import type { CanvasCoords, CityData, DrawScene } from "../types/globals.types";
-
 import { MapControls } from "./MapControls";
 
 import style from "./App.module.scss";
+
+import type { CanvasCoords, CityData, DrawScene } from "../types/globals.types";
+import type { LabelSettings, LayerList } from "../types/label.types";
+import type { QueryClient } from "@tanstack/react-query";
 
 const DEFAULT_LAYER = 0;
 
@@ -31,6 +33,21 @@ export default function App() {
   // -- UI State --
   const [inputValue, setInputValue] = useState<string>("");
   const [inputQuery, setInputQuery] = useState<string>("");
+  const [labelSettings, setLabelSettings] = useState<LabelSettings>({
+    showCountryName: {
+      enabled: true
+    },
+    tagline: {
+      enabled: true,
+      text: "A city of seven hills"
+    },
+    footnote: {
+      enabled: true,
+      text: "51.5072° N, 0.1276° W"
+    }
+  });
+  const [selectedStyle, setSelectedStyle] = useState<string>(STYLE_OPTIONS[0]);
+
   // Dev note -> test if this is needed/enhancement or relic
   // cityHit: "",
   // countryHit: ""
@@ -45,23 +62,23 @@ export default function App() {
   const [pathObjects, setPathObjects] = useState<Record<string, Path2D> | null>(
     null
   ); // The cached Path2D objects
-  const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({
-    water: true,
+  const [visibleLayers, setVisibleLayers] = useState<LayerList>({
     express: true,
     arterial: true,
     local: true,
     service: true,
-    pedestrian: false,
+    pedestrian: true,
     nature: true,
-    landmarks: true,
     transportation: true,
     miscellaneous: true,
+    landmarks: true,
+    water: false,
     canvas: true
   });
   // -- Performance Data --
   const fetchDurationRef = useRef<number | null>(null);
   const renderDurationRef = useRef<number | null>(null);
-  const currentMirrorIndexRef = useRef<number>(0);
+  const [mirrorIndex, setMirrorIndex] = useState<number | null>(null);
   // -- Camera & Interaction --
   const transformRef = useRef<CanvasCoords>({
     x: 0,
@@ -82,6 +99,18 @@ export default function App() {
       ])
     )
   );
+
+  // MARK: Helper for Labels
+
+  const updateLabelSettings = (
+    field: string,
+    patch: { enabled: boolean; text: string }
+  ) => {
+    setLabelSettings((prev) => ({
+      ...prev,
+      [field]: { ...prev[field], ...patch }
+    }));
+  };
 
   // MARK: Load background image on mount
   useBackgroundImage(bgImageRef, setBgImageLoaded, placeholderImg, fallbackImg);
@@ -112,7 +141,7 @@ export default function App() {
       staleTime: 1000 * 60 * 3,
       gcTime: 1000 * 60 * 3
     },
-    currentMirrorIndexRef,
+    setMirrorIndex as React.Dispatch<React.SetStateAction<number | null>>,
     fetchDurationRef as React.RefObject<number | null>,
     queryClient as QueryClient
   );
@@ -139,7 +168,7 @@ export default function App() {
   //MARK: precalculated paths
   usePrecalculatePaths(
     processedData,
-    containerRef as React.RefObject<HTMLDivElement | null>,
+    containerRef as React.RefObject<HTMLDivElement>,
     setPathObjects,
     transformRef as React.RefObject<CanvasCoords>,
     drawScene as DrawScene,
@@ -157,6 +186,11 @@ export default function App() {
     renderDurationRef.current = null;
     fetchDurationRef.current = null;
     setQueryCity(city);
+    updateLabelSettings("footnote", {
+      enabled: true,
+      text: formatLatLon(city.lat, city.lon, 4)
+    });
+    queryClient.invalidateQueries({ queryKey: ["roads", city.areaId] });
   };
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -217,6 +251,11 @@ export default function App() {
           setShowFrame={setShowFrame}
           setLayerColors={setLayerColors}
           layerColors={layerColors}
+          labelSettings={labelSettings}
+          updateLabelSettings={updateLabelSettings}
+          selectedStyle={selectedStyle}
+          setSelectedStyle={setSelectedStyle}
+          STYLE_OPTIONS={STYLE_OPTIONS}
         />
       </div>
 
@@ -226,12 +265,13 @@ export default function App() {
         isRoadFetching={isRoadFetching}
         isRoadsSuccess={isRoadsSuccess}
         isRoadError={isRoadError}
-        currentMirrorIndexRef={currentMirrorIndexRef}
+        mirrorIndex={mirrorIndex}
         apiLength={api.length}
-        cityData={cityData}
+        queryCity={queryCity}
         onCancelFetch={() => {
           queryClient.cancelQueries({ queryKey: ["roads"] });
           setQueryCity(null);
+          setMirrorIndex(0);
         }}
         pathObjects={pathObjects}
         showFrame={showFrame}
@@ -241,6 +281,8 @@ export default function App() {
         bgImageSource={getBackgroundImageSource()}
         blurredPlaceholder={BLURRED_PLACEHOLDER}
         layerColors={layerColors}
+        labelSettings={labelSettings}
+        frameStyle={selectedStyle}
       />
     </div>
   );

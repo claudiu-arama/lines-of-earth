@@ -1,15 +1,12 @@
 @use "./_variables" as *;
 
-$outer-border: 20px;
-$mat-padding: 40px;
-
-$inner-b2: 3px;
-$inner-gap: 10px;
-$inner-b1: 6px;
-
-$spread-b2: $inner-b2;
-$spread-gap: $inner-b2 + $inner-gap;
-$spread-b1: $inner-b2 + $inner-gap + $inner-b1;
+$panel-radius: 4px;
+$field-radius: 4px;
+$accent: #2f6f57;
+$border-soft: #e7e3da;
+$text-dark: #1f2a24;
+$text-muted: #8a8578;
+$font-stack: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
 
 .mapViewport {
   position: absolute;
@@ -41,7 +38,7 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
   display: flex;
   align-items: center;
   justify-content: center;
-
+  overflow: hidden;
   background: transparent;
   pointer-events: none;
 }
@@ -67,6 +64,7 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
     );
 }
 
+// ── Structural (style-agnostic): layout, sizing, aspect ratio only ──
 .frameOuter {
   box-sizing: border-box;
   display: flex;
@@ -83,35 +81,38 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
 }
 
 .frameOuterVisible {
-  height: 90vh;
-  aspect-ratio: 50 / 70;
-  border: var(--outer-border) solid #111;
-  background: #fff;
+  --aspect: 0.7142857; // 5/7 portrait
+  --frame-max-h: 90vh;
+  --frame-max-w: 92vw;
 
+  aspect-ratio: var(--aspect);
+  height: min(var(--frame-max-h), var(--frame-max-w) / var(--aspect));
+  width: min(var(--frame-max-w), var(--frame-max-h) * var(--aspect));
+
+  // Shared "hanging on the wall" depth — independent of border style,
+  // so every style still reads as a framed piece rather than a flat rect.
   box-shadow:
-    0 32px 100px rgba(0, 0, 0, 0.75),
-    0 10px 28px rgba(0, 0, 0, 0.5),
-    0 3px 8px rgba(0, 0, 0, 0.3),
-    inset 2px 2px 0 rgba(255, 255, 255, 0.15),
-    inset -2px -2px 0 rgba(0, 0, 0, 0.1);
-
+    0 28px 90px rgba(0, 0, 0, 0.55),
+    0 8px 22px rgba(0, 0, 0, 0.35);
   transform: perspective(1400px) rotateX(0.4deg);
   transform-origin: center bottom;
+
+  @media (max-width: 700px) {
+    --frame-max-h: 78vh;
+    --frame-max-w: 95vw;
+  }
 }
 
 .frameOuterLandscape {
-  height: 100%;
-  width: auto;
-  max-height: 90vh;
-  aspect-ratio: 70 / 50;
-}
-.frameOuterSquare {
-  height: 100%;
-  width: auto;
-  max-height: 90vh;
-  aspect-ratio: 70 / 70;
+  --aspect: 1.4; // 7/5
 }
 
+.frameOuterSquare {
+  --aspect: 1;
+}
+
+// ── Mat: the white space. Same for every style; thickness comes from
+//    --mat (FRAME_CONFIG.mat). Vintage tints it paper-toned. ──────────
 .mat {
   display: flex;
   flex: 1;
@@ -126,10 +127,11 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
 }
 
 .matVisible {
-  padding: var(--mat);
+  padding: 10px;
   background: #ffffff;
 }
 
+// ── Double frame: the ring(s) that sit directly against the canvas ───
 .doubleFrame {
   flex: 1;
   display: flex;
@@ -144,11 +146,49 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
   box-shadow: none;
 }
 
+// Modern — a single slim line, then straight into the white space
+[data-frame-style="modern"] {
+  .matVisible {
+    padding: 15px;
+  }
+
+  .doubleFrameVisible {
+    box-shadow: 0 0 0 var(--inner-b1, 6px) #1a1a1a;
+  }
+}
+
+// Classic — a single fat line, then straight into the white space
+[data-frame-style="classic"] {
+  .matVisible {
+    padding: var(--mat);
+  }
+}
 .doubleFrameVisible {
-  box-shadow:
-    0 0 0 var(--spread-b2) #111,
-    0 0 0 var(--spread-gap) #fff,
-    0 0 0 var(--spread-b1) #111;
+  box-shadow: 0 0 0 var(--outer-border, 8px) #111;
+}
+
+// Vintage — the old double-ruled chart border: slim sepia line, a hair
+// of paper showing through, then a fat sepia line — then the white space
+[data-frame-style="vintage"] {
+  .matVisible {
+    padding: var(--mat);
+  }
+
+  .doubleFrameVisible {
+    box-shadow:
+      0 0 0 var(--spread-b2, 3px) #111,
+      0 0 0 var(--spread-gap, 7px) #fff,
+      0 0 0 var(--spread-b1, 13px) #111;
+  }
+}
+
+[data-frame-style="minimal"] {
+  .matVisible {
+    padding: 8px;
+  }
+  .doubleFrameVisible {
+    box-shadow: none; // default: minimal has no ring at all
+  }
 }
 
 .canvas {
@@ -173,8 +213,8 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
 .loadingScreen {
   position: fixed;
   inset: 0;
-  background: rgba(250, 249, 245, 0.85);
-  backdrop-filter: blur(2px);
+  background: rgba(31, 42, 36, 0.45);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -182,91 +222,89 @@ $spread-b1: $inner-b2 + $inner-gap + $inner-b1;
 }
 
 .loadingCard {
-  width: 280px;
-  padding: 20px 22px;
-  background: $paper;
-  border: 1.5px solid $ink;
-  border-radius: 0;
+  width: 300px;
+  padding: 28px 26px;
+  background: #fff;
+  border-radius: $panel-radius;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  position: relative;
-
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  gap: 16px;
+  font-family: $font-stack;
 }
 
 .spinnerLarge {
-  width: 36px;
-  height: 36px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-top-color: $ink;
+  width: 34px;
+  height: 34px;
+  border: 3px solid $border-soft;
+  border-top-color: $accent;
   border-radius: 50%;
-  animation: spin 4s linear infinite;
-}
-
-.spinnerLarge {
-  width: 36px;
-  height: 36px;
-  border: 1px solid $ink;
-  position: relative;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 6px;
-    border: 1px solid $ink;
-    animation: spin 10s linear infinite;
-  }
+  animation: spin 0.9s linear infinite;
 }
 
 .loadingTitle {
-  font-family: $mono;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  color: $ink;
+  color: $text-dark;
   margin: 0;
   text-align: center;
 }
 
-// ─── Subtitle ────────────────────────────────────────────────────────────────
-
 .loadingSubtitle {
-  font-family: $mono;
-  font-size: 10px;
-  color: $ink-muted;
+  font-size: 12px;
+  color: $text-muted;
   text-align: center;
-  letter-spacing: 0.04em;
+  margin: 0;
+  line-height: 1.5;
 
   strong {
-    color: $ink;
+    color: $text-dark;
     font-weight: 700;
   }
 }
 
-// ─── Cancel button ───────────────────────────────────────────────────────────
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  background: $border-soft;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $accent;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.loadingError {
+  font-size: 11px;
+  color: #c0392b;
+  text-align: center;
+  margin: 0;
+}
 
 .cancelButton {
   all: unset;
-  margin-top: 6px;
-  padding: 8px 12px;
-  border: 1px solid $ink;
-  background: transparent;
-  color: $ink;
-  font-family: $mono;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid $border-soft;
+  border-radius: $field-radius;
+  background: #fff;
+  color: $text-dark;
+  font-family: $font-stack;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   text-align: center;
-  transition:
-    background 0.15s,
-    color 0.15s;
+  box-sizing: border-box;
+  transition: background 0.15s;
 
   &:hover {
-    background: $ink;
-    color: $paper;
+    background: #f6f4ee;
   }
 }
 

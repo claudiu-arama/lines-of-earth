@@ -112,3 +112,24 @@ export const simplifyPath = (
 
   return simplifiedResults;
 };
+
+export function formatLatLon(
+  lat: string | number,
+  lon: string | number,
+  precision = 4
+): string {
+  const latNum = typeof lat === "string" ? parseFloat(lat) : lat;
+  const lonNum = typeof lon === "string" ? parseFloat(lon) : lon;
+
+  if (Number.isNaN(latNum) || Number.isNaN(lonNum)) {
+    return "";
+  }
+
+  const latHemisphere = latNum >= 0 ? "N" : "S";
+  const lonHemisphere = lonNum >= 0 ? "E" : "W";
+
+  const latStr = Math.abs(latNum).toFixed(precision);
+  const lonStr = Math.abs(lonNum).toFixed(precision);
+
+  return `${latStr}° ${latHemisphere}, ${lonStr}° ${lonHemisphere}`;
+}

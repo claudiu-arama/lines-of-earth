@@ -31,7 +31,7 @@ interface CameraState {
 }
 
 export const useCameraControls = (
-  canvasRef: React.RefObject<HTMLCanvasElement>,
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
   transformRef: React.RefObject<CanvasCoords>,
   drawScene: DrawScene
 ) => {

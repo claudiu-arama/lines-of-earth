@@ -10,8 +10,25 @@ export const LAYER_KEYS = [
   "water",
   "miscellaneous"
 ];
-export const MAP_PRESETS = {
-  blueprint: {
+export const MAP_PRESETS = [
+  {
+    id: "clean-white",
+    name: "Clean White",
+    config: {
+      water: { weight: 1.5, color: "#b8d4e8", minScale: 0.0002 },
+      landmarks: { weight: 1.2, color: "#e63946", minScale: 0.0007 },
+      express: { weight: 2.0, color: "#111111", minScale: 0.0 },
+      arterial: { weight: 1.3, color: "#222222", minScale: 0.00005 },
+      local: { weight: 0.8, color: "#333333", minScale: 0.0002 },
+      service: { weight: 0.6, color: "#555555", minScale: 0.0006 },
+      nature: { weight: 0.8, color: "#3b3f3c", minScale: 0.0009 },
+      pedestrian: { weight: 0.6, color: "#666666", minScale: 0.0012 },
+      transportation: { weight: 1.0, color: "#222222", minScale: 0.0004 },
+      miscellaneous: { weight: 0.5, color: "#999999", minScale: 0.0012 },
+      canvas: { color: "#ffffff", minScale: 0.0007 }
+    }
+  },
+  {
     id: "blueprint",
     name: "Blueprint",
     config: {
@@ -28,7 +45,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#1a3a4a", minScale: 0.0007 }
     }
   },
-  "ink-on-paper": {
+  {
     id: "ink-on-paper",
     name: "Ink on Paper",
     config: {
@@ -45,24 +62,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#f5f0e8", minScale: 0.0007 }
     }
   },
-  "clean-white": {
-    id: "clean-white",
-    name: "Clean White",
-    config: {
-      water: { weight: 1.5, color: "#b8d4e8", minScale: 0.0002 },
-      landmarks: { weight: 1.2, color: "#e63946", minScale: 0.0007 },
-      express: { weight: 2.0, color: "#111111", minScale: 0.0 },
-      arterial: { weight: 1.3, color: "#222222", minScale: 0.00005 },
-      local: { weight: 0.8, color: "#333333", minScale: 0.0002 },
-      service: { weight: 0.6, color: "#555555", minScale: 0.0006 },
-      nature: { weight: 0.8, color: "#4a7c59", minScale: 0.0009 },
-      pedestrian: { weight: 0.6, color: "#666666", minScale: 0.0012 },
-      transportation: { weight: 1.0, color: "#222222", minScale: 0.0004 },
-      miscellaneous: { weight: 0.5, color: "#999999", minScale: 0.0012 },
-      canvas: { color: "#ffffff", minScale: 0.0007 }
-    }
-  },
-  "warm-ivory": {
+  {
     id: "warm-ivory",
     name: "Warm Ivory",
     config: {
@@ -79,7 +79,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#fdf6e3", minScale: 0.0007 }
     }
   },
-  graphite: {
+  {
     id: "graphite",
     name: "Graphite",
     config: {
@@ -96,7 +96,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#2a2a2a", minScale: 0.0007 }
     }
   },
-  midnight: {
+  {
     id: "midnight",
     name: "Midnight",
     config: {
@@ -113,7 +113,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#0f1923", minScale: 0.0007 }
     }
   },
-  forest: {
+  {
     id: "forest",
     name: "Forest",
     config: {
@@ -130,7 +130,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#1e2d1e", minScale: 0.0007 }
     }
   },
-  sepia: {
+  {
     id: "sepia",
     name: "Sepia",
     config: {
@@ -147,7 +147,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#f0e6d0", minScale: 0.0007 }
     }
   },
-  "neon-city": {
+  {
     id: "neon-city",
     name: "Neon City",
     config: {
@@ -164,7 +164,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#0a0a1a", minScale: 0.0007 }
     }
   },
-  "dusty-rose": {
+  {
     id: "dusty-rose",
     name: "Dusty Rose",
     config: {
@@ -181,7 +181,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#f5e8ec", minScale: 0.0007 }
     }
   },
-  slate: {
+  {
     id: "slate",
     name: "Slate",
     config: {
@@ -198,7 +198,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#2a3540", minScale: 0.0007 }
     }
   },
-  chalk: {
+  {
     id: "chalk",
     name: "Chalk",
     config: {
@@ -215,7 +215,7 @@ export const MAP_PRESETS = {
       canvas: { color: "#1a1a2e", minScale: 0.0007 }
     }
   }
-};
+];
 export const LAYER_MAPPING = {
   water: [
     "water",
@@ -301,14 +301,20 @@ export const LAYER_MAPPING = {
   miscellaneous: []
 };
 
+export const STYLE_OPTIONS = [
+  "modern",
+  "classic",
+  "vintage",
+  "minimal"
+] as const;
+
 export const LAYER_MAPPING_SETS = Object.fromEntries(
   Object.entries(LAYER_MAPPING).map(([key, arr]) => [key, new Set(arr)])
 );
 
 export const FRAME_CONFIG = {
-  outerBorder: 20,
-  mat: 40,
-  innerBorder1: 6,
+  mat: 30,
+  innerBorder1: 5,
   innerGap: 4,
   innerBorder2: 3
 };

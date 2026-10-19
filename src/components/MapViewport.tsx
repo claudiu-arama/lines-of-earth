@@ -11,11 +11,12 @@ export function MapViewport({
   canvasRef,
   mapViewportRef,
   isRoadFetching,
-  currentMirrorIndexRef,
+  mirrorIndex,
   onCancelFetch,
   pathObjects,
   showFrame,
   frameOrientation,
+  frameStyle,
   bgImageLoaded,
   bgImageError,
   bgImageSource,
@@ -24,16 +25,18 @@ export function MapViewport({
   isRoadsSuccess,
   isRoadError,
   layerColors,
-  cityData
+  queryCity,
+  labelSettings
 }: {
   canvasRef: any;
   mapViewportRef: any;
   isRoadFetching: any;
-  currentMirrorIndexRef: React.RefObject<number>;
+  mirrorIndex: number | null;
   onCancelFetch: any;
   pathObjects: Record<string, Path2D> | null;
   showFrame: any;
   frameOrientation: any;
+  frameStyle: any;
   bgImageLoaded: any;
   bgImageError: any;
   bgImageSource: any;
@@ -42,12 +45,12 @@ export function MapViewport({
   isRoadsSuccess: any;
   isRoadError: any;
   layerColors: any;
-  cityData: any;
+  queryCity: any;
+  labelSettings: any;
 }) {
   const hasMap = !!pathObjects;
 
   const frameCSSVars = {
-    "--outer-border": `${FRAME_CONFIG.outerBorder}px`,
     "--mat": `${FRAME_CONFIG.mat}px`,
     "--inner-b1": `${FRAME_CONFIG.innerBorder1}px`,
     "--inner-gap": `${FRAME_CONFIG.innerGap}px`,
@@ -77,6 +80,7 @@ export function MapViewport({
                     ${showFrame && hasMap ? styles.frameOuterVisible : styles.frameOuterHidden}
                     ${showFrame && hasMap && frameOrientation === "landscape" ? styles.frameOuterLandscape : frameOrientation === "square" ? styles.frameOuterSquare : ""}
                   `}
+          data-frame-style={frameStyle}
           // TODO: replace `any` with proper types
           style={showFrame && hasMap ? (frameCSSVars as any) : undefined}
         >
@@ -95,8 +99,10 @@ export function MapViewport({
                 />
                 {showFrame && hasMap && (
                   <CityLabel
-                    cityName={cityData?.display_name?.split(",")[0]}
-                    country={cityData?.display_name?.split(",")[1]}
+                    cityName={
+                      queryCity?.display_name?.split(",")[0] || queryCity?.name
+                    }
+                    country={queryCity?.country}
                     message="A city of seven hills"
                     variant="fade"
                     bgColor={
@@ -106,6 +112,7 @@ export function MapViewport({
                     }
                     accentColor="#1a1a1a"
                     fontColor="#1a1a1a"
+                    labelSettings={labelSettings}
                   />
                 )}
               </div>
@@ -119,11 +126,24 @@ export function MapViewport({
             <div className={styles.spinnerLarge} />
             <h2 className={styles.loadingTitle}>Building City Network</h2>
             <p className={styles.loadingSubtitle}>
-              {isRoadError}
               Getting data from server{" "}
-              <strong>{currentMirrorIndexRef.current + 1}</strong> of{" "}
+              <strong>{mirrorIndex !== null ? mirrorIndex + 1 : 0}</strong> of{" "}
               {apiLength}
             </p>
+            <div className={styles.progressTrack}>
+              <div
+                className={styles.progressFill}
+                style={{
+                  width: `${((mirrorIndex !== null ? mirrorIndex + 1 : 0) / apiLength) * 100}%`
+                }}
+              />
+            </div>
+
+            {isRoadError && (
+              <p className={styles.loadingError}>
+                Trouble reaching this server — trying another…
+              </p>
+            )}
             <button className={styles.cancelButton} onClick={onCancelFetch}>
               Cancel
             </button>

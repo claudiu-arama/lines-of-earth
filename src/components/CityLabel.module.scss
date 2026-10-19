@@ -23,7 +23,7 @@
 .city {
   font-family: "Cormorant Garamond", serif;
   font-weight: 300;
-  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  font-size: clamp(1.8rem, 2.5vw, 32px);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   margin: 0;
@@ -46,6 +46,6 @@
   font-size: clamp(0.55rem, 1.2vw, 0.7rem);
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  margin: 10px 0 0;
+  margin: 0;
   opacity: 0.5;
 }
